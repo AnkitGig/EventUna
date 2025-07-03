@@ -5,12 +5,15 @@ const { generateOtp } = require("../utils/otp");
 const joi = require("joi");
 // Signup
 exports.signup = async (req, res) => {
+  console.log("Received signup request:", req.body);
   const schema = joi.object({
     fullName: joi.string().min(3).max(50).required(),
     email: joi.string().email().required(),
     mobile: joi.string().min(10).max(15).required(),
     password: joi.string().min(6).required(),
     role: joi.string().optional(),
+    register_id: joi.string().optional(),
+    ios_register_id: joi.string().optional(),
   });
   const { error } = schema.validate(req.body);
   if (error)
@@ -18,7 +21,7 @@ exports.signup = async (req, res) => {
       .status(400)
       .json({ status: false, message: error.details[0].message });
 
-  const { fullName, email, mobile, password, role } = req.body;
+  const { fullName, email, mobile, password, role, register_id, ios_register_id } = req.body;
 
   const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
   if (existingUser)
@@ -35,6 +38,8 @@ exports.signup = async (req, res) => {
     password: hashedPassword,
     otp,
     role: role || "user",
+    register_id: register_id || null,
+    ios_register_id: ios_register_id || null
   });
 
   await user.save();
@@ -77,6 +82,8 @@ exports.login = async (req, res) => {
   const schema = joi.object({
     email: joi.string().email().required(),
     password: joi.string().required(),
+    register_id: joi.string().optional(),
+    ios_register_id: joi.string().optional(),
   });
   const { error } = schema.validate(req.body);
   if (error)
@@ -84,7 +91,7 @@ exports.login = async (req, res) => {
       .status(400)
       .json({ status: false, message: error.details[0].message });
 
-  const { email, password } = req.body;
+  const { email, password, register_id, ios_register_id } = req.body;
 
   const user = await User.findOne({ email });
   if (!user || !(await bcrypt.compare(password, user.password)))
@@ -96,6 +103,11 @@ exports.login = async (req, res) => {
     return res
       .status(403)
       .json({ status: false, message: "Account not verified" });
+
+  // Update register_id and ios_register_id if provided
+  if (register_id) user.register_id = register_id;
+  if (ios_register_id) user.ios_register_id = ios_register_id;
+  if (register_id || ios_register_id) await user.save();
 
   const token = jwt.sign(
     { id: user._id, role: user.role },
