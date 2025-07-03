@@ -122,6 +122,8 @@ exports.login = async (req, res) => {
     message: "Login successful",
     token,
     userId: user._id,
+    register_id: user.register_id,
+    ios_register_id: user.ios_register_id,
   });
 };
 
