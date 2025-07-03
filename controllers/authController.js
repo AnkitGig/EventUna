@@ -10,7 +10,6 @@ exports.signup = async (req, res) => {
     email: joi.string().email().required(),
     mobile: joi.string().min(10).max(15).required(),
     password: joi.string().min(6).required(),
-    confirmPassword: joi.string().min(6).required(),
     role: joi.string().optional(),
   });
   const { error } = schema.validate(req.body);
@@ -19,12 +18,7 @@ exports.signup = async (req, res) => {
       .status(400)
       .json({ status: false, message: error.details[0].message });
 
-  const { fullName, email, mobile, password, confirmPassword, role } = req.body;
-
-  if (password !== confirmPassword)
-    return res
-      .status(400)
-      .json({ status: false, message: "Passwords do not match" });
+  const { fullName, email, mobile, password, role } = req.body;
 
   const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
   if (existingUser)
