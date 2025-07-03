@@ -182,9 +182,8 @@ exports.resendOtp = async (req, res) => {
   if (!user)
     return res.status(404).json({ status: false, message: "User not found" });
 
-  if (user.isVerified)
-    return res.status(400).json({ status: false, message: "User already verified" });
-
+  // Remove the check for user.isVerified
+  // Always resend OTP, regardless of verification status
   const otp = generateOtp();
   user.otp = otp;
   await user.save();
