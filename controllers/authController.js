@@ -19,7 +19,7 @@ exports.signup = async (req, res) => {
       .status(400)
       .json({ status: false, message: error.details[0].message });
 
-  const { fullName, email, mobile, password, confirmPassword } = req.body;
+  const { fullName, email, mobile, password, confirmPassword, role } = req.body;
 
   if (password !== confirmPassword)
     return res
