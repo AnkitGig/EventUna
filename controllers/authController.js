@@ -1,10 +1,14 @@
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { generateOtp } = require("../utils/otp");
+
+
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"
+
+import User from "../models/User.js"
+import { generateOtp } from "../utils/otp.js"
+
 
 // Signup
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   const { fullName, email, mobile, password, confirmPassword, role } = req.body;
 
   if (password !== confirmPassword)
@@ -37,7 +41,7 @@ exports.signup = async (req, res) => {
 };
 
 // Verify OTP
-exports.verifyOtp = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   const { userId, otp } = req.body;
 
   const user = await User.findById(userId);
@@ -55,7 +59,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 // Login
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -86,7 +90,7 @@ exports.login = async (req, res) => {
 };
 
 // Forgot Password
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
@@ -101,7 +105,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // Reset Password
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   const { userId, otp, newPassword } = req.body;
 
   const user = await User.findById(userId);

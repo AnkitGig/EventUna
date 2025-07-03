@@ -1,17 +1,22 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../controllers/authController');
-const { protect, isAdmin } = require('../middleware/authMiddleware');
+import { Router } from "express";
 
-router.post('/signup', auth.signup);
-router.post('/verify-otp', auth.verifyOtp);
-router.post('/login', auth.login);
-router.post('/forgot-password', auth.forgotPassword);
-router.post('/reset-password', auth.resetPassword);
+import { protect, isAdmin } from "../middleware/authMiddleware.js";
+
+import {signup, verifyOtp, login, forgotPassword, resetPassword} from "../controllers/authController.js"
+
+const router = Router();
+
+router.post("/signup", signup);
+router.post("/verify-otp", verifyOtp);
+router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // Example protected route
-router.get('/admin-only', protect, isAdmin, (req, res) => {
+router.get("/admin-only", protect, isAdmin, (req, res) => {
   res.json({ message: "Welcome Admin!" });
 });
 
-module.exports = router;
+export default router;
+
+
