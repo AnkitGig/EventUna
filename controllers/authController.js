@@ -1,7 +1,10 @@
 const User = require("../models/User");
+const { deleteOldImages } = require("../utils/helpers");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateOtp } = require("../utils/otp");
+const path = require("path");
+
 const joi = require("joi");
 // Signup
 exports.signup = async (req, res) => {
@@ -21,7 +24,15 @@ exports.signup = async (req, res) => {
       .status(400)
       .json({ status: false, message: error.details[0].message });
 
-  const { fullName, email, mobile, password, role, register_id, ios_register_id } = req.body;
+  const {
+    fullName,
+    email,
+    mobile,
+    password,
+    role,
+    register_id,
+    ios_register_id,
+  } = req.body;
 
   const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
   if (existingUser)
@@ -39,7 +50,7 @@ exports.signup = async (req, res) => {
     otp,
     role: role || "user",
     register_id: register_id || null,
-    ios_register_id: ios_register_id || null
+    ios_register_id: ios_register_id || null,
   });
 
   await user.save();
@@ -189,7 +200,9 @@ exports.resendOtp = async (req, res) => {
     .or("email", "mobile");
   const { error } = schema.validate(req.body);
   if (error)
-    return res.status(400).json({ status: false, message: error.details[0].message });
+    return res
+      .status(400)
+      .json({ status: false, message: error.details[0].message });
 
   const { email, mobile } = req.body;
   const user = await User.findOne(email ? { email } : { mobile });
@@ -211,3 +224,96 @@ exports.resendOtp = async (req, res) => {
 
   res.json({ status: true, message: "OTP resent", userId: user._id });
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { dob, gender } = req.body;
+    const schema = joi.object({
+      dob: joi.string().optional(),
+      gender: joi.string().optional(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const user = await User.findById(req.user.id);
+    let profilePic = user.profilePic;
+    if (!user)
+      return res.status(404).json({ status: false, message: "User not found" });
+
+    if (req.file) {
+      profilePic = req.file.filename;
+      if (user.profilePic) {
+        deleteOldImages("profile", user.profilePic);
+      }
+    }
+
+    await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        dob: dob || user.dob,
+        gender: gender || user.gender,
+        profilePic: profilePic,
+      },
+      { new: true }
+    );
+    console.log("req.user", req.file.filename);
+    res
+      .status(200)
+      .json({
+        status: true,
+        message: "Profile updated successfully",
+        userId: user._id,
+      });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.privacyPolicy = async (req, res) => {
+  try {
+    res.sendFile(path.join(__dirname, "../view/privacyPolicy.html"));
+  } catch (error) {
+    console.error("Error fetching privacy policy:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.getUserProfile = async (req, res) => {
+  try {
+    const userId = req.query.id;
+    if (userId) {
+      if (userId !== req.user.id) {
+        return res.status(403).json({ status: false, message: "Access denied" });
+      }
+
+      const user = await User.findById(userId).select("-password -otp");
+      if (!user) {
+        return res.status(404).json({ status: false, message: "User not found" });
+      }
+
+      user.profilePic = user.profilePic
+        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
+        : process.env.DEFAULT_PROFILE_PIC;
+
+      return res.status(200).json({ status: true, user });
+    }
+
+    const allUsers = await User.find({ role: { $ne: "admin" } }).select("-password -otp");
+
+    allUsers.map((user)=>{
+      user.profilePic = user.profilePic
+        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
+        : process.env.DEFAULT_PROFILE_PIC;
+    })
+    res.status(200).json({ status: true, users: allUsers });
+
+  } catch (error) {
+    console.error("Error getting user profile:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+

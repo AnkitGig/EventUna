@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../controllers/authController');
+const { upload } = require("../middleware/multer");
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
 router.post('/signup', auth.signup);
@@ -9,6 +10,9 @@ router.post('/login', auth.login);
 router.post('/forgot-password', auth.forgotPassword);
 router.post('/reset-password', auth.resetPassword);
 router.post('/resend-otp', auth.resendOtp);
+router.put('/update-profile', protect, upload.single('profilePic'), auth.updateProfile);
+router.get('/privacy-policy',auth.privacyPolicy);
+router.get('/user-profile', protect, auth.getUserProfile);
 
 // Example protected route
 router.get('/admin-only', protect, isAdmin, (req, res) => {
