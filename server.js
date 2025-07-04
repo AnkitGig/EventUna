@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 
 dotenv.config();
@@ -9,6 +10,9 @@ const app = express();
 connectDB();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use("/api",express.static("public"))
+app.use(express.static(path.join(__dirname, 'view')));
+
 
 app.get('/', (req, res) => {
  console.log("login --------");
