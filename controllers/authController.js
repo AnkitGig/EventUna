@@ -4,8 +4,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateOtp } = require("../utils/otp");
 const path = require("path");
-
 const joi = require("joi");
+const e = require("cors");
+
 // Signup
 exports.signup = async (req, res) => {
   try {
@@ -36,10 +37,14 @@ exports.signup = async (req, res) => {
     } = req.body;
 
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
-    if (existingUser)
-      return res
-        .status(400)
-        .json({ status: false, message: "User already exists" });
+    if (existingUser) {
+      let message =
+        existingUser.email === email
+          ? `email already exists. Please use another one`
+          : `mobile number already exists. Please use another one`;
+      return res.status(400).json({ status: false, message: message });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOtp();
 
@@ -184,7 +189,7 @@ exports.forgotPassword = async (req, res) => {
 
 // Reset Password
 exports.resetPassword = async (req, res) => {
-try {
+  try {
     const schema = joi.object({
       userId: joi.string().required(),
       otp: joi.string().required(),
@@ -195,66 +200,64 @@ try {
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-  
+
     const { userId, otp, newPassword } = req.body;
-  
+
     const user = await User.findById(userId);
     if (!user || user.otp !== otp)
       return res
         .status(400)
         .json({ status: false, message: "Invalid OTP or user" });
-  
+
     user.password = await bcrypt.hash(newPassword, 10);
     user.otp = null;
     await user.save();
-  
+
     res.json({ status: true, message: "Password reset successfully" });
-} catch (error) {
+  } catch (error) {
     console.error("Error during password reset:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
-
 };
 
 // Resend OTP
 exports.resendOtp = async (req, res) => {
- try {
-   const schema = joi
-     .object({
-       email: joi.string().email(),
-       mobile: joi.string().min(10).max(15),
-     })
-     .or("email", "mobile");
-   const { error } = schema.validate(req.body);
-   if (error)
-     return res
-       .status(400)
-       .json({ status: false, message: error.details[0].message });
- 
-   const { email, mobile } = req.body;
-   const user = await User.findOne(email ? { email } : { mobile });
-   if (!user)
-     return res.status(404).json({ status: false, message: "User not found" });
- 
-   // Remove the check for user.isVerified
-   // Always resend OTP, regardless of verification status
-   const otp = generateOtp();
-   user.otp = otp;
-   await user.save();
- 
-   // Simulate sending OTP (log to console)
-   if (email) {
-     console.log(`Resend OTP ${otp} to email: ${email}`);
-   } else {
-     console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
-   }
- 
-   res.json({ status: true, message: "OTP resent", userId: user._id });
- } catch (error) {
-   console.error("Error during resend OTP:", error);
-   res.status(500).json({ status: false, message: "Internal server error" });
-  
- }
+  try {
+    const schema = joi
+      .object({
+        email: joi.string().email(),
+        mobile: joi.string().min(10).max(15),
+      })
+      .or("email", "mobile");
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const { email, mobile } = req.body;
+    const user = await User.findOne(email ? { email } : { mobile });
+    if (!user)
+      return res.status(404).json({ status: false, message: "User not found" });
+
+    // Remove the check for user.isVerified
+    // Always resend OTP, regardless of verification status
+    const otp = generateOtp();
+    user.otp = otp;
+    await user.save();
+
+    // Simulate sending OTP (log to console)
+    if (email) {
+      console.log(`Resend OTP ${otp} to email: ${email}`);
+    } else {
+      console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
+    }
+
+    res.json({ status: true, message: "OTP resent", userId: user._id });
+  } catch (error) {
+    console.error("Error during resend OTP:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
 };
 
 exports.updateProfile = async (req, res) => {
