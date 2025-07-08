@@ -2,6 +2,7 @@ const EventCategory = require("../models/event/EventCategory");
 const EventType = require("../models/event/EventType");
 const preferences = require("../utils/placePreference");
 const EventPoll = require("../models/event/EventPoll");
+const EventPollVote = require("../models/event/EventPollVote");
 const Event = require("../models/event/Event");
 const EventPreference = require("../models/event/EventPreference");
 const User = require("../models/user/User");
@@ -291,8 +292,6 @@ exports.eventByUser = async (req, res) => {
       .populate("eventId", "eventTitle")
       .exec();
 
-
-    
     // Attach preferences to each event
     events.forEach((event) => {
       event.preferences = eventPreferences
@@ -307,5 +306,108 @@ exports.eventByUser = async (req, res) => {
   } catch (error) {
     console.error("Error fetching events by user:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.voteOrUnvotePoll = async (req, res) => {
+  try {
+    const { pollId, optionId, action } = req.body;
+    const userId= req.user.id;
+    const user = await User.findById(req.user.id);
+  
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: false, message: "User not found." });
+    }
+
+    if (!pollId || !optionId || !["vote", "unvote"].includes(action)) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "pollId, optionId, and valid action ('vote' or 'unvote') are required.",
+      });
+    }
+
+    const poll = await EventPoll.findById(pollId);
+    if (!poll) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Poll not found." });
+    }
+
+    if (poll.activeTill < new Date()) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Poll has expired." });
+    }
+
+    const optionIndex = poll.options.findIndex(
+      (opt) => opt._id.toString() === optionId
+    );
+
+    console.log("Option Index:", optionIndex);
+    
+
+    if (optionIndex === -1) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid option ID." });
+    }
+
+    const existingVote = await EventPollVote.findOne({ pollId, userId });
+
+    // 🗳 VOTE
+    if (action === "vote") {
+      if (existingVote) {
+        return res
+          .status(400)
+          .json({ status: false, message: "You have already voted." });
+      }
+
+      poll.options[optionIndex].voteCount += 1;
+      await poll.save();
+
+      await EventPollVote.create({ pollId, userId, optionId });
+
+      return res.status(200).json({
+        status: true,
+        message: "Vote submitted successfully.",
+      });
+    }
+
+    // ❌ UNVOTE
+    if (action === "unvote") {
+      if (!existingVote) {
+        return res
+          .status(400)
+          .json({ status: false, message: "You haven't voted yet." });
+      }
+
+      if (existingVote.optionId.toString() !== optionId) {
+        return res
+          .status(400)
+          .json({
+            status: false,
+            message: "You did not vote for this option.",
+          });
+      }
+
+      poll.options[optionIndex].voteCount = Math.max(
+        0,
+        poll.options[optionIndex].voteCount - 1
+      );
+      await poll.save();
+
+      await EventPollVote.deleteOne({ _id: existingVote._id });
+
+      return res.status(200).json({
+        status: true,
+        message: "Vote removed successfully.",
+      });
+    }
+  } catch (error) {
+    console.error("Poll vote error:", error);
+    res.status(500).json({ status: false, message: "Internal server error." });
   }
 };
