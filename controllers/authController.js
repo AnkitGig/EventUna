@@ -289,12 +289,12 @@ exports.updateProfile = async (req, res) => {
       req.user.id,
       {
         dob: dob || user.dob,
-        gender: gender || user.gender,
+        gender: gender.toLowerCase() || user.gender,
         profilePic: profilePic,
       },
       { new: true }
     );
-    console.log("req.user", req.file.filename);
+    // console.log("req.user", req.file.filename);
     res.status(200).json({
       status: true,
       message: "Profile updated successfully",
