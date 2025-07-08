@@ -1,11 +1,10 @@
-const User = require("../models/User");
+const User = require("../models/user/User");
 const { deleteOldImages } = require("../utils/helpers");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateOtp } = require("../utils/otp");
 const path = require("path");
 const joi = require("joi");
-const e = require("cors");
 
 // Signup
 exports.signup = async (req, res) => {
@@ -38,6 +37,19 @@ exports.signup = async (req, res) => {
 
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
     if (existingUser) {
+      if (existingUser.isVerified == false) {
+        const otp = generateOtp();
+        existingUser.otp = otp;
+        await existingUser.save();
+        console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
+        return res
+          .status(200)
+          .json({
+            status: true,
+            message: "OTP resent to mobile",
+            userId: existingUser._id,
+          });
+      }
       let message =
         existingUser.email === email
           ? `email already exists. Please use another one`
@@ -260,6 +272,7 @@ exports.resendOtp = async (req, res) => {
   }
 };
 
+// Update Profile
 exports.updateProfile = async (req, res) => {
   try {
     const { dob, gender } = req.body;
@@ -306,6 +319,8 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+
+// Privacy Policy
 exports.privacyPolicy = async (req, res) => {
   try {
     res.sendFile(path.join(__dirname, "../view/privacyPolicy.html"));
@@ -315,6 +330,7 @@ exports.privacyPolicy = async (req, res) => {
   }
 };
 
+// User Profile
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.query.id;
@@ -336,6 +352,8 @@ exports.getUserProfile = async (req, res) => {
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : process.env.DEFAULT_PROFILE_PIC;
 
+      user.gender = user.gender.toUpperCase();
+
       return res.status(200).json({ status: true, user });
     }
 
@@ -344,6 +362,8 @@ exports.getUserProfile = async (req, res) => {
     );
 
     allUsers.map((user) => {
+      user.gender =
+        user.gender == null ? user.gender : user.gender.toUpperCase();
       user.profilePic = user.profilePic
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : process.env.DEFAULT_PROFILE_PIC;
