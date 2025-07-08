@@ -2,10 +2,9 @@ const mongoose = require("mongoose");
 
 const eventSchema = new mongoose.Schema(
   {
-    eventTitle: {
+    eventType: {
       type: String,
       required: true,
-      trim: true,
     },
 
     category: {
@@ -30,6 +29,11 @@ const eventSchema = new mongoose.Schema(
     },
 
     eventTitle: {
+      type: String,
+      required: true,
+    },
+
+    eventMessage: {
       type: String,
       required: true,
     },

@@ -11,7 +11,7 @@ router.post('/forgot-password', auth.forgotPassword);
 router.post('/reset-password', auth.resetPassword);
 router.post('/resend-otp', auth.resendOtp);
 router.put('/update-profile', protect, upload.single('profilePic'), auth.updateProfile);
-router.get('/privacy-policy',auth.privacyPolicy);
+router.get('/privacy-policy', protect,auth.privacyPolicy);
 router.get('/user-profile', protect, auth.getUserProfile);
 
 // Example protected route

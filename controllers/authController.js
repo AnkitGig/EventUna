@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { generateOtp } = require("../utils/otp");
 const path = require("path");
 const joi = require("joi");
-const e = require("cors");
+
 
 // Signup
 exports.signup = async (req, res) => {
@@ -38,6 +38,9 @@ exports.signup = async (req, res) => {
 
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
     if (existingUser) {
+      // if (existingUser.isVerified == false) {
+        
+      // }
       let message =
         existingUser.email === email
           ? `email already exists. Please use another one`
@@ -289,12 +292,12 @@ exports.updateProfile = async (req, res) => {
       req.user.id,
       {
         dob: dob || user.dob,
-        gender: gender || user.gender,
+        gender: gender.toLowerCase() || user.gender,
         profilePic: profilePic,
       },
       { new: true }
     );
-    console.log("req.user", req.file.filename);
+    // console.log("req.user", req.file.filename);
     res.status(200).json({
       status: true,
       message: "Profile updated successfully",
@@ -336,6 +339,8 @@ exports.getUserProfile = async (req, res) => {
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : process.env.DEFAULT_PROFILE_PIC;
 
+      user.gender =  user.gender.toUpperCase();
+
       return res.status(200).json({ status: true, user });
     }
 
@@ -344,6 +349,7 @@ exports.getUserProfile = async (req, res) => {
     );
 
     allUsers.map((user) => {
+      // user.gender = user.gender.toUpperCase();
       user.profilePic = user.profilePic
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : process.env.DEFAULT_PROFILE_PIC;
