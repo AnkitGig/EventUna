@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
+const indexRoutes = require('./routes/indexRoutes');
 
 dotenv.config();
 
@@ -22,7 +22,7 @@ app.use("/api", express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, 'view')));           
 
 // ✅ Routes
-app.use('/api/auth', authRoutes);
+app.use('/api', indexRoutes);
 
 
 // ✅ Root Route
