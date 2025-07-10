@@ -42,13 +42,11 @@ exports.signup = async (req, res) => {
         existingUser.otp = otp;
         await existingUser.save();
         console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
-        return res
-          .status(200)
-          .json({
-            status: true,
-            message: "OTP resent to mobile",
-            userId: existingUser._id,
-          });
+        return res.status(200).json({
+          status: true,
+          message: "OTP resent to mobile",
+          userId: existingUser._id,
+        });
       }
       let message =
         existingUser.email === email
@@ -62,7 +60,7 @@ exports.signup = async (req, res) => {
 
     const user = new User({
       fullName,
-      email,
+      email: email.toLowerCase(),
       mobile,
       password: hashedPassword,
       otp,
@@ -129,11 +127,15 @@ exports.login = async (req, res) => {
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-
-    const { email, password, register_id, ios_register_id } = req.body;
+    const email = req.body.email.toLowerCase();
+    const { password, register_id, ios_register_id } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user || user.isDeleted || !(await bcrypt.compare(password, user.password)))
+    if (
+      !user ||
+      user.isDeleted ||
+      !(await bcrypt.compare(password, user.password))
+    )
       return res
         .status(400)
         .json({ status: false, message: "Account does not exist" });
@@ -321,7 +323,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-
 // Privacy Policy
 exports.privacyPolicy = async (req, res) => {
   try {
@@ -387,7 +388,9 @@ exports.deleteUser = async (req, res) => {
     }
     user.isDeleted = true;
     await user.save();
-    res.status(200).json({ status: true, message: "User deleted successfully" });
+    res
+      .status(200)
+      .json({ status: true, message: "User deleted successfully" });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
