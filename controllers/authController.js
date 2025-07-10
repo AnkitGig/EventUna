@@ -275,10 +275,11 @@ exports.resendOtp = async (req, res) => {
 // Update Profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { dob, gender } = req.body;
+    const { dob, gender, fullName } = req.body;
     const schema = joi.object({
       dob: joi.string().optional(),
       gender: joi.string().optional(),
+      fullName: joi.string().optional(),
     });
     const { error } = schema.validate(req.body);
     if (error)
@@ -304,6 +305,7 @@ exports.updateProfile = async (req, res) => {
         dob: dob || user.dob,
         gender: gender.toLowerCase() || user.gender,
         profilePic: profilePic,
+        fullName: fullName || user.fullName,
       },
       { new: true }
     );
