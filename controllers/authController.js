@@ -11,7 +11,18 @@ exports.signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body);
     const schema = joi.object({
-      fullName: joi.string().min(3).max(50).required(),
+      fullName: joi.string()
+        .pattern(/^[a-zA-Z\s]+$/)
+        .min(3)
+        .max(50)
+        .required()
+        .messages({
+          "string.pattern.base":
+            "Full name must only contain letters and spaces",
+          "string.min": "Full name must be at least 3 characters long",
+          "string.max": "Full name must be less than or equal to 50 characters",
+          "any.required": "Full name is required",
+        }).optional(),
       email: joi.string().email().required(),
       mobile: joi.string().min(10).max(15).required(),
       password: joi.string().min(6).required(),
@@ -42,13 +53,11 @@ exports.signup = async (req, res) => {
         existingUser.otp = otp;
         await existingUser.save();
         console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
-        return res
-          .status(200)
-          .json({
-            status: true,
-            message: "OTP resent to mobile",
-            userId: existingUser._id,
-          });
+        return res.status(200).json({
+          status: true,
+          message: "OTP resent to mobile",
+          userId: existingUser._id,
+        });
       }
       let message =
         existingUser.email === email
@@ -131,7 +140,9 @@ exports.login = async (req, res) => {
         .json({ status: false, message: error.details[0].message });
 
     const { email, password, register_id, ios_register_id } = req.body;
+     
 
+    email.toLowerCase()
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res
@@ -318,7 +329,6 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-
 
 // Privacy Policy
 exports.privacyPolicy = async (req, res) => {

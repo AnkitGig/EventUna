@@ -83,19 +83,57 @@ exports.addEventType = async (req, res) => {
   }
 };
 
+// exports.allEventType = async (req, res) => {
+//   try {
+//     const eventTypes = await EventType.find().populate("EventCategory", "category").exec();
+//     res.status(200).json({
+//       status: true,
+//       message: "Event Types fetched successfully",
+//       data: eventTypes,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching event types:", error);
+//     res.status(500).json({ status: false, message: "Internal server error" });
+//   }
+// };
+
+
 exports.allEventType = async (req, res) => {
   try {
-    const eventTypes = await EventType.find();
+    const eventTypes = await EventType.aggregate([
+      {
+        $lookup: {
+          from: "eventcategories", // MongoDB collection name
+          let: { typeId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$eventType", "$$typeId"] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                category: 1,
+              },
+            },
+          ],
+          as: "categories",
+        },
+      },
+    ]);
+
     res.status(200).json({
       status: true,
-      message: "Event Types fetched successfully",
+      message: "Event Types with categories fetched successfully",
       data: eventTypes,
     });
   } catch (error) {
-    console.error("Error fetching event types:", error);
+    console.error("Error fetching event types with categories:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
 
 exports.categoryByEventType = async (req, res) => {
   try {
@@ -148,7 +186,6 @@ exports.placePreferences = async (req, res) => {
 };
 
 exports.createEvent = async (req, res) => {
-  console.log(req.user);
   const session = await Event.startSession();
   session.startTransaction();
 
@@ -160,7 +197,8 @@ exports.createEvent = async (req, res) => {
       eventCategory,
       eventDates,
       timeDuration,
-      placePreferences,
+      placePreference,
+      placeDetail,
       poll,
     } = req.body;
 
@@ -177,11 +215,11 @@ exports.createEvent = async (req, res) => {
           endTime: joi.string().required(),
         })
         .required(),
-      placePreferences: joi
-        .array()
-        .items(joi.string().valid(...Object.values(preferences)))
-        .min(1)
+      placePreference: joi
+        .string()
+        .valid(...Object.values(preferences))
         .required(),
+      placeDetail: joi.object().required(),
       poll: joi
         .object({
           question: joi.string().required(),
@@ -205,15 +243,12 @@ exports.createEvent = async (req, res) => {
     if (!user) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(404).json({
-        status: false,
-        message: "User not found",
-      });
+      return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    // ✅ Create Event
+    // ✅ 1. Create Event
     const newEvent = new Event({
-      userId: req.user.id, // Assuming auth middleware sets req.user
+      userId: req.user.id,
       eventTitle,
       invitationMessage,
       eventType,
@@ -224,15 +259,27 @@ exports.createEvent = async (req, res) => {
 
     await newEvent.save({ session });
 
-    // ✅ Save Place Preferences
-    const preferenceDocs = placePreferences.map((pref) => ({
+    // ✅ 2. Save Place Preference + Detail
+    const placeDoc = {
       eventId: newEvent._id,
-      option: pref,
-    }));
+      option: placePreference,
+    };
 
-    await EventPreference.insertMany(preferenceDocs, { session });
+    if (placePreference === "Private location") {
+      placeDoc.address = placeDetail.address;
+    } else if (placePreference === "Choose from map") {
+      placeDoc.coordinates = {
+        lat: placeDetail.lat,
+        lng: placeDetail.lng,
+        formattedAddress: placeDetail.formattedAddress,
+      };
+    } else if (placePreference === "Restaurant from list") {
+      placeDoc.selectedRestaurants = placeDetail.restaurants; // array of { name, placeId, address }
+    }
 
-    // ✅ Save Poll (if provided)
+    await EventPreference.create([placeDoc], { session });
+
+    // ✅ 3. Save Poll (optional)
     if (poll) {
       const newPoll = new EventPoll({
         eventId: newEvent._id,
@@ -247,7 +294,7 @@ exports.createEvent = async (req, res) => {
 
       const savedPoll = await newPoll.save({ session });
 
-      // Attach poll ID to the event
+      // attach poll ID to event
       newEvent.pollId = savedPoll._id;
       await newEvent.save({ session });
     }
@@ -312,9 +359,9 @@ exports.eventByUser = async (req, res) => {
 exports.voteOrUnvotePoll = async (req, res) => {
   try {
     const { pollId, optionId, action } = req.body;
-    const userId= req.user.id;
+    const userId = req.user.id;
     const user = await User.findById(req.user.id);
-  
+
     if (!user) {
       return res
         .status(404)
@@ -347,7 +394,6 @@ exports.voteOrUnvotePoll = async (req, res) => {
     );
 
     console.log("Option Index:", optionIndex);
-    
 
     if (optionIndex === -1) {
       return res
@@ -385,12 +431,10 @@ exports.voteOrUnvotePoll = async (req, res) => {
       }
 
       if (existingVote.optionId.toString() !== optionId) {
-        return res
-          .status(400)
-          .json({
-            status: false,
-            message: "You did not vote for this option.",
-          });
+        return res.status(400).json({
+          status: false,
+          message: "You did not vote for this option.",
+        });
       }
 
       poll.options[optionIndex].voteCount = Math.max(
