@@ -13,6 +13,7 @@ router.post('/resend-otp', auth.resendOtp);
 router.put('/update-profile', protect, upload.single('profilePic'), auth.updateProfile);
 router.get('/privacy-policy', protect,auth.privacyPolicy);
 router.get('/user-profile', protect, auth.getUserProfile);
+router.delete('/delete-user', protect, auth.deleteUser);
 
 // Example protected route
 router.get('/admin-only', protect, isAdmin, (req, res) => {

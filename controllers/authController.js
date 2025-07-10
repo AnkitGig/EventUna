@@ -133,10 +133,10 @@ exports.login = async (req, res) => {
     const { email, password, register_id, ios_register_id } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password)))
+    if (!user || user.isDeleted || !(await bcrypt.compare(password, user.password)))
       return res
         .status(400)
-        .json({ status: false, message: "Invalid credentials" });
+        .json({ status: false, message: "Account does not exist" });
 
     if (!user.isVerified)
       return res
@@ -373,6 +373,23 @@ exports.getUserProfile = async (req, res) => {
     res.status(200).json({ status: true, users: allUsers });
   } catch (error) {
     console.error("Error getting user profile:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// Soft Delete User
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    user.isDeleted = true;
+    await user.save();
+    res.status(200).json({ status: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
