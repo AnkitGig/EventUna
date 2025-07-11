@@ -1,11 +1,18 @@
 const Merchant = require("../models/merchant/Merchant");
+const Services = require("../models/merchant/Services");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const path = require("path");
 const { generateOtp } = require("../utils/otp");
 const joi = require("joi");
 
+
+const isMerchant = (req, res) => {
+  if (req.user && req.user.role === "merchant") {
+    return true;
+  }
+  return false;
+}
 // Signup
 exports.signup = async (req, res) => {
   try {
@@ -193,6 +200,7 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       userId: user._id,
+      role: user.role,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
     });
@@ -201,3 +209,24 @@ exports.login = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+
+exports.services= async(req, res)=>{
+  try {
+
+    const merchantReponse = await isMerchant(req, res);
+    console.log(`Merchant Reponse: ${merchantReponse}`);
+    
+    const services = await Services.find({});
+    if (!services || services.length === 0) {
+      return res.status(404).json({ status: false, message: "No services found" });
+    }
+    
+    res.status(200).json({ status: true, message: "Services fetched successfully", services });
+    
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    res.status(500).json({ status: false, message: "Internal server error"})
+    
+  }
+}

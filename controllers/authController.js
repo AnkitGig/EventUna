@@ -1,4 +1,5 @@
 const User = require("../models/user/User");
+const Address = require("../models/user/Address");
 const { deleteOldImages } = require("../utils/helpers");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -84,7 +85,7 @@ exports.signup = async (req, res) => {
     console.log(`Send OTP ${otp} to mobile: ${mobile}`);
     res
       .status(201)
-      .json({ status: true, message: "OTP sent to mobile", userId: user._id });
+      .json({ status: true, message: "OTP sent to mobile", userId: user._id});
   } catch (error) {
     console.error("Error during signup:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
@@ -172,6 +173,7 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       userId: user._id,
+      role: user.role ,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
     });
@@ -384,3 +386,46 @@ exports.getUserProfile = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+exports.addAddress= async (req, res) => {
+  try {
+    const { address1, address2, postcode } = req.body;
+    const schema = joi.object({
+      address1: joi.string().required(),
+      address2: joi.string().optional(),
+      postcode: joi.string().required(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const newAddress = new Address({
+      address1,
+      address2,
+      postcode,
+      userId: req.user.id,
+    });
+
+    await newAddress.save();
+    res.status(201).json({ status: true, message: "Address added successfully" });
+  } catch (error) {
+    console.error("Error adding address:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+}
+
+
+exports.getAddress= async(req,res)=>{
+  try {
+    const addresses = await Address.find({ userId: req.user.id }).select("-userId -createdAt -updatedAt -__v");
+    if (!addresses || addresses.length === 0) {
+      return res.status(404).json({ status: false, message: "No addresses found" });
+    }
+    res.status(200).json({ status: true, addresses });
+  } catch (error) {
+    console.error("Error fetching addresses:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+}
