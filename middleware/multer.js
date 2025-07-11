@@ -9,6 +9,17 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
 
-module.exports = { upload };
+const storage2 = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/services');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+const upload2 = multer({ storage2 });
+
+module.exports = { upload, upload2 };
