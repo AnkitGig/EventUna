@@ -9,4 +9,6 @@ router.post("/login", merchant.login)
 router.get("/services", protect, merchant.services)
 
 
+
+
 module.exports = router;

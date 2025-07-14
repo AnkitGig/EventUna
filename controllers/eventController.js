@@ -1,6 +1,7 @@
 const EventCategory = require("../models/event/EventCategory");
 const EventType = require("../models/event/EventType");
 const preferences = require("../utils/placePreference");
+const notes = require("../utils/notes")
 const EventPoll = require("../models/event/EventPoll");
 const EventPollVote = require("../models/event/EventPollVote");
 const Event = require("../models/event/Event");
@@ -184,6 +185,22 @@ exports.placePreferences = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+exports.eventNotes = async (req, res) => {
+  try {
+    // Fetch all event notes
+    const eventNotes = notes;
+
+    res.status(200).json({
+      status: true,
+      message: "Event notes fetched successfully",
+      data: eventNotes,
+    });
+  } catch (error) {
+    console.error("Error fetching event notes:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+}
 
 exports.createEvent = async (req, res) => {
   const session = await Event.startSession();
