@@ -72,7 +72,7 @@ exports.signup = async (req, res) => {
 
     const user = new User({
       fullName,
-      email,
+      email: email.toLowerCase(),
       mobile,
       password: hashedPassword,
       otp,
@@ -143,7 +143,7 @@ exports.login = async (req, res) => {
     const { email, password, register_id, ios_register_id } = req.body;
      
 
-    email.toLowerCase()
+    // email.toLowerCase()
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res
@@ -427,5 +427,27 @@ exports.getAddress= async(req,res)=>{
   } catch (error) {
     console.error("Error fetching addresses:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
+  }
+}
+
+
+exports.allUsers = async(req,res)=>{
+  try {
+    const users = await User.find({ role: { $ne: "admin" } }).select("-password -otp -updatedAt -createdAt -__v");
+    if (!users || users.length === 0) {
+      return res.status(404).json({ status: false, message: "No users found" });
+    }
+
+    users.map((user)=>{
+        user.profilePic = user.profilePic ? `${process.env.BASE_URL}/profile/${user.profilePic}`: `${process.env.DEFAULT_PROFILE_PIC}`
+    })
+
+    return res.status(200).json({ status: true, users, message: "All users fetched successfully" });
+
+    
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+    
   }
 }

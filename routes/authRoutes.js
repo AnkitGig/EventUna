@@ -15,6 +15,7 @@ router.get('/privacy-policy', protect,auth.privacyPolicy);
 router.get('/user-profile', protect, auth.getUserProfile);
 router.post('/add-address', protect, auth.addAddress);
 router.get('/address', protect, auth.getAddress);
+router.get("/all-users", protect, auth.allUsers)
 
 // Example protected route
 router.get('/admin-only', protect, isAdmin, (req, res) => {
