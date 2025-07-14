@@ -1,7 +1,7 @@
 const EventCategory = require("../models/event/EventCategory");
 const EventType = require("../models/event/EventType");
 const preferences = require("../utils/placePreference");
-const notes = require("../utils/notes")
+const EventNotes = require("../models/event/EventNotes");
 const EventPoll = require("../models/event/EventPoll");
 const EventPollVote = require("../models/event/EventPollVote");
 const Event = require("../models/event/Event");
@@ -98,7 +98,6 @@ exports.addEventType = async (req, res) => {
 //   }
 // };
 
-
 exports.allEventType = async (req, res) => {
   try {
     const eventTypes = await EventType.aggregate([
@@ -134,7 +133,6 @@ exports.allEventType = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-
 
 exports.categoryByEventType = async (req, res) => {
   try {
@@ -188,19 +186,20 @@ exports.placePreferences = async (req, res) => {
 
 exports.eventNotes = async (req, res) => {
   try {
-    // Fetch all event notes
-    const eventNotes = notes;
-
+    const notes = await EventNotes.find().select("notes").exec();
+    if (!notes || notes.length === 0) {
+      return res.status(404).json({ status: false, message: "No notes found" });
+    }
     res.status(200).json({
       status: true,
       message: "Event notes fetched successfully",
-      data: eventNotes,
+      data: notes,
     });
   } catch (error) {
     console.error("Error fetching event notes:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
 
 exports.createEvent = async (req, res) => {
   const session = await Event.startSession();
