@@ -12,7 +12,8 @@ exports.signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body);
     const schema = joi.object({
-      fullName: joi.string()
+      fullName: joi
+        .string()
         .pattern(/^[a-zA-Z\s]+$/)
         .min(3)
         .max(50)
@@ -23,7 +24,8 @@ exports.signup = async (req, res) => {
           "string.min": "Full name must be at least 3 characters long",
           "string.max": "Full name must be less than or equal to 50 characters",
           "any.required": "Full name is required",
-        }).optional(),
+        })
+        .optional(),
       email: joi.string().email().required(),
       mobile: joi.string().min(10).max(15).required(),
       password: joi.string().min(6).required(),
@@ -85,7 +87,7 @@ exports.signup = async (req, res) => {
     console.log(`Send OTP ${otp} to mobile: ${mobile}`);
     res
       .status(201)
-      .json({ status: true, message: "OTP sent to mobile", userId: user._id});
+      .json({ status: true, message: "OTP sent to mobile", userId: user._id });
   } catch (error) {
     console.error("Error during signup:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
@@ -176,7 +178,7 @@ exports.login = async (req, res) => {
       message: "Login successful",
       token,
       userId: user._id,
-      role: user.role ,
+      role: user.role,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
     });
@@ -411,7 +413,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.addAddress= async (req, res) => {
+exports.addAddress = async (req, res) => {
   try {
     const { address1, address2, postcode } = req.body;
     const schema = joi.object({
@@ -433,45 +435,66 @@ exports.addAddress= async (req, res) => {
     });
 
     await newAddress.save();
-    res.status(201).json({ status: true, message: "Address added successfully" });
+    res
+      .status(201)
+      .json({ status: true, message: "Address added successfully" });
   } catch (error) {
     console.error("Error adding address:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
 
-
-exports.getAddress= async(req,res)=>{
+exports.getAddress = async (req, res) => {
   try {
-    const addresses = await Address.find({ userId: req.user.id }).select("-userId -createdAt -updatedAt -__v");
+    const addresses = await Address.find({ userId: req.user.id }).select(
+      "-userId -createdAt -updatedAt -__v"
+    );
     if (!addresses || addresses.length === 0) {
-      return res.status(404).json({ status: false, message: "No addresses found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "No addresses found" });
     }
     res.status(200).json({ status: true, addresses });
   } catch (error) {
     console.error("Error fetching addresses:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
 
-
-exports.allUsers = async(req,res)=>{
+exports.allUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: { $ne: "admin" } }).select("-password -otp -updatedAt -createdAt -__v");
+    const userId = req.user.id;
+
+    const users = await User.find({
+      role: { $ne: "admin" },
+      _id: {
+        $ne: userId,
+      },
+    }).select("-password -otp -updatedAt -createdAt -__v");
     if (!users || users.length === 0) {
       return res.status(404).json({ status: false, message: "No users found" });
     }
 
-    users.map((user)=>{
-        user.profilePic = user.profilePic ? `${process.env.BASE_URL}/profile/${user.profilePic}`: `${process.env.DEFAULT_PROFILE_PIC}`
-    })
+    // users.map((user) => {
+    //   if (user._id.toString() === userId) {
+    //     return res.status(403).json({
+    //       status: false,
+    //       message: "You cannot view your own profile in this list",
+    //     });
+    //   }
+    // });
 
-    return res.status(200).json({ status: true, users, message: "All users fetched successfully" });
+    users.map((user) => {
+      user.profilePic = user.profilePic
+        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
+        : `${process.env.DEFAULT_PROFILE_PIC}`;
+    });
 
-    
+    return res
+      .status(200)
+      .json({ status: true, users, message: "All users fetched successfully" });
   } catch (error) {
     console.error("Error fetching all users:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
-    
   }
-}
+};
