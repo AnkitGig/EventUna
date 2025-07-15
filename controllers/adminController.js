@@ -2,6 +2,7 @@ const User = require(`../models/user/User`);
 const Services = require(`../models/merchant/Services`);
 const Merchant = require(`../models/merchant/Merchant`);
 const Notes = require(`../models/event/EventNotes`);
+const AddtionalServices = require(`../models/event/EventAdditionalServices`);
 const joi = require("joi");
 
 //    "email": "admin@yopmail.com",
@@ -141,13 +142,11 @@ exports.allUsers = async (req, res) => {
       user.profilePic = user.profilePic
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : `${process.env.DEFAULT_PROFILE_PIC}`;
-      return res
-        .status(200)
-        .json({
-          status: true,
-          message: "User fetched successfully",
-          data: user,
-        });
+      return res.status(200).json({
+        status: true,
+        message: "User fetched successfully",
+        data: user,
+      });
     }
 
     // Validate user ID
@@ -167,21 +166,51 @@ exports.allUsers = async (req, res) => {
       return res.status(404).json({ status: false, message: "No users found" });
     }
 
-    users.map((user)=>{
+    users.map((user) => {
       user.profilePic = user.profilePic
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : `${process.env.DEFAULT_PROFILE_PIC}`;
-    })
+    });
 
-    res
-      .status(200)
-      .json({
-        status: true,
-        message: "Users fetched successfully",
-        data: users,
-      });
+    res.status(200).json({
+      status: true,
+      message: "Users fetched successfully",
+      data: users,
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.addAdditionalServices = async (req, res) => {
+  try {
+    const { serviceName } = req.body;
+
+    const schema = joi.object({
+      serviceName: joi.string().required().messages({
+        "string.empty": "service name are required",
+        "any.required": "service name are required",
+      }),
+    });
+
+    const { error } = schema.validate({ serviceName });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+
+     // Create new note
+    const newService = new AddtionalServices({
+      serviceName,
+    });
+
+    // Save note to database
+    await newService.save();
+
+    res.status(201).json({ message: "Service added successfully", note: newService });
+  } catch (error) {
+    console.error("Error while adding additinal services :", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };

@@ -13,6 +13,10 @@ router.post('/create-event', protect, event.createEvent)
 router.get('/event-user', protect, event.eventByUser);
 router.patch('/event-poll-vote', protect, event.voteOrUnvotePoll);
 router.get('/notes', protect, event.eventNotes)
+router.post('/registry', protect, event.createRegistry)
+router.get('/registry', protect, event.registryByUser);
+router.get('/registry/search', protect, event.searchRegistry)
+router.get('/additional-services', protect, event.additionalServices)
 
 // Example protected route
 router.get('/admin-only', protect, isAdmin, (req, res) => {

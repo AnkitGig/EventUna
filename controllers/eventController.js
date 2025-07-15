@@ -4,10 +4,13 @@ const preferences = require("../utils/placePreference");
 const EventNotes = require("../models/event/EventNotes");
 const EventPoll = require("../models/event/EventPoll");
 const EventPollVote = require("../models/event/EventPollVote");
+const EventRegistry = require("../models/event/EventRegistry");
 const Event = require("../models/event/Event");
 const EventPreference = require("../models/event/EventPreference");
+const EventAddtionalServices = require(`../models/event/EventAdditionalServices`);
 const User = require("../models/user/User");
 const joi = require("joi");
+const EventAdditionalServices = require("../models/event/EventAdditionalServices");
 
 exports.addEventCategory = async (req, res) => {
   try {
@@ -469,5 +472,122 @@ exports.voteOrUnvotePoll = async (req, res) => {
   } catch (error) {
     console.error("Poll vote error:", error);
     res.status(500).json({ status: false, message: "Internal server error." });
+  }
+};
+
+exports.createRegistry = async (req, res) => {
+  try {
+    const { registryName, registryUrtl } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    const schema = joi.object({
+      registryName: joi.string().required(),
+      registryUrtl: joi.string().required(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+    }
+
+    // Create new registry
+    const newRegistry = new EventRegistry({
+      registryName,
+      registryUrtl,
+      userId,
+    });
+
+    await newRegistry.save();
+
+    res.status(201).json({
+      status: true,
+      message: "Registry created successfully",
+      data: newRegistry,
+    });
+  } catch (error) {
+    console.error("Error creating registry:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.registryByUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const registries = await EventRegistry.find({ userId })
+      .select("registryName registryUrtl")
+      .exec();
+    if (!registries || registries.length === 0) {
+      return res
+        .status(404)
+        .json({ status: false, message: "No registries found for this user" });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Registries fetched successfully",
+      data: registries,
+    });
+  } catch (error) {
+    console.error("Error fetching registries by user:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.searchRegistry = async (req, res) => {
+  try {
+    const { query } = req.query;
+    const userId = req.user.id;
+
+    if (!query || query.trim() === "") {
+      return res
+        .status(400)
+        .json({ status: false, message: "Query parameter is required" });
+    }
+
+    const registries = await EventRegistry.find({
+      userId: userId, // ✅ Filter by logged-in user
+      registryName: { $regex: query, $options: "i" },
+    })
+      .select("registryName registryUrtl createdAt")
+      .exec();
+
+    if (!registries || registries.length === 0) {
+      return res
+        .status(404)
+        .json({
+          status: false,
+          message: "No registries found matching the query",
+        });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Registries fetched successfully",
+      data: registries,
+    });
+  } catch (error) {
+    console.error("Error searching registries:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.additionalServices = async (req, res) => {
+  try {
+    const services = await EventAdditionalServices.find()
+      .select("serviceName")
+      .exec();
+    if (!services || services.length === 0) {
+      return res.status(404).json({ status: false, message: "No notes found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Event additional services fetched successfully",
+      data: services,
+    });
+  } catch (error) {
+    console.error("Error while getting additional services", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
