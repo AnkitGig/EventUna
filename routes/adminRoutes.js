@@ -11,6 +11,7 @@ router.get("/all-merchants", protect, isAdmin, admin.getAllMerchants);
 router.post("/add-notes", protect, isAdmin, admin.addNotes)
 router.get("/all-users", protect, isAdmin, admin.allUsers)
 router.post("/additional-services", protect, isAdmin, admin.addAdditionalServices)
+router.post("/place-preference", protect, isAdmin, admin.placePreferences)
 // router.
 
 

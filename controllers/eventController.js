@@ -7,7 +7,9 @@ const EventPollVote = require("../models/event/EventPollVote");
 const EventRegistry = require("../models/event/EventRegistry");
 const Event = require("../models/event/Event");
 const EventPreference = require("../models/event/EventPreference");
-const EventAddtionalServices = require(`../models/event/EventAdditionalServices`);
+const EventPreferences = require("../models/event/EventPreferences");
+ 
+// const EventAddtionalServices = require("../models/event/EventAdditionalServices");
 const User = require("../models/user/User");
 const joi = require("joi");
 const EventAdditionalServices = require("../models/event/EventAdditionalServices");
@@ -171,21 +173,21 @@ exports.categoryByEventType = async (req, res) => {
   }
 };
 
-exports.placePreferences = async (req, res) => {
-  try {
-    // Fetch all place preferences
-    const placePreferences = preferences;
+// exports.placePreferences = async (req, res) => {
+//   try {
+//     // Fetch all place preferences
+//     const placePreferences = preferences;
 
-    res.status(200).json({
-      status: true,
-      message: "Place preferences fetched successfully",
-      data: placePreferences,
-    });
-  } catch (error) {
-    console.error("Error fetching place preferences:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
+//     res.status(200).json({
+//       status: true,
+//       message: "Place preferences fetched successfully",
+//       data: placePreferences,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching place preferences:", error);
+//     res.status(500).json({ status: false, message: "Internal server error" });
+//   }
+// };
 
 exports.eventNotes = async (req, res) => {
   try {
@@ -591,3 +593,25 @@ exports.additionalServices = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+
+exports.placePreferences = async (req, res) => {
+  try {
+    const preference = await EventPreferences.find()
+      .select("preferences")
+      .exec();
+    if (!preference || preference.length === 0) {
+      return res.status(404).json({ status: false, message: "No prefetences found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Event place preferences fetched successfully",
+      data: preference,
+    });
+  } catch (error) {
+    console.error("Error while getting place preference", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+

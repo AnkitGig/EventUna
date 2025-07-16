@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const preferences = require("../../utils/placePreference");
+
 
 const placePreferenceSchema = new mongoose.Schema(
   {
@@ -11,9 +11,9 @@ const placePreferenceSchema = new mongoose.Schema(
     },
 
     option: {
-      type: String,
-      required: true,
-      enum: Object.values(preferences), // e.g., "Choose from map", etc.
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PlacePreferences",
+      required: true
     },
 
     // For "Private location"

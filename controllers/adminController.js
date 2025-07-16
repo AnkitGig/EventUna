@@ -3,6 +3,7 @@ const Services = require(`../models/merchant/Services`);
 const Merchant = require(`../models/merchant/Merchant`);
 const Notes = require(`../models/event/EventNotes`);
 const AddtionalServices = require(`../models/event/EventAdditionalServices`);
+const Preferences = require(`../models/event/EventPreferences`);
 const joi = require("joi");
 
 //    "email": "admin@yopmail.com",
@@ -199,8 +200,7 @@ exports.addAdditionalServices = async (req, res) => {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-
-     // Create new note
+    // Create new note
     const newService = new AddtionalServices({
       serviceName,
     });
@@ -208,9 +208,45 @@ exports.addAdditionalServices = async (req, res) => {
     // Save note to database
     await newService.save();
 
-    res.status(201).json({ message: "Service added successfully", note: newService });
+    res
+      .status(201)
+      .json({ message: "Service added successfully", note: newService });
   } catch (error) {
     console.error("Error while adding additinal services :", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.placePreferences = async (req, res) => {
+  try {
+    const { preference } = req.body;
+
+    const schema = joi.object({
+      preference: joi.string().required().messages({
+        "string.empty": "preference name are required",
+        "any.required": "preference name are required",
+      }),
+    });
+
+    const { error } = schema.validate({ preference });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+
+       // Create new note
+    const newPreference = new Preferences({
+      preferences: preference ,
+    });
+
+    // Save note to database
+    await newPreference.save();
+
+    res
+      .status(201)
+      .json({ statue: true, message: "Preference added successfully", preference: preference });
+  } catch (error) {
+    console.error("Error while adding place preferences :", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
