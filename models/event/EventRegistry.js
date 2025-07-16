@@ -19,4 +19,4 @@ const registrySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("registry", registrySchema);
+module.exports = mongoose.model("Registry", registrySchema);

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const event = require('../controllers/eventController');
-
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
 
@@ -19,6 +18,7 @@ router.post('/registry', protect, event.createRegistry)
 router.get('/registry', protect, event.registryByUser);
 router.get('/registry/search', protect, event.searchRegistry)
 router.get('/additional-services', protect, event.additionalServices)
+router.post("/poll", protect, event.createPoll)
 
 
 

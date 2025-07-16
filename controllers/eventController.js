@@ -8,7 +8,7 @@ const EventRegistry = require("../models/event/EventRegistry");
 const Event = require("../models/event/Event");
 const EventPreference = require("../models/event/EventPreference");
 const EventPreferences = require("../models/event/EventPreferences");
- 
+
 // const EventAddtionalServices = require("../models/event/EventAdditionalServices");
 const User = require("../models/user/User");
 const joi = require("joi");
@@ -206,6 +206,142 @@ exports.eventNotes = async (req, res) => {
   }
 };
 
+// exports.createEvent = async (req, res) => {
+//   const session = await Event.startSession();
+//   session.startTransaction();
+
+//   try {
+//     const {
+//       eventTitle,
+//       invitationMessage,
+//       eventType,
+//       eventCategory,
+//       eventDates,
+//       timeDuration,
+//       placePreference,
+//       placeDetail,
+//       poll,
+//     } = req.body;
+
+//     // ✅ Schema validation
+//     const schema = joi.object({
+//       eventTitle: joi.string().required(),
+//       invitationMessage: joi.string().allow(""),
+//       eventType: joi.string().required(),
+//       eventCategory: joi.string().required(),
+//       eventDates: joi.array().items(joi.date().iso()).min(1).required(),
+//       timeDuration: joi
+//         .object({
+//           startTime: joi.string().required(),
+//           endTime: joi.string().required(),
+//         })
+//         .required(),
+//       placePreference: joi
+//         .string()
+//         .valid(...Object.values(preferences))
+//         .required(),
+//       placeDetail: joi.object().required(),
+//       poll: joi
+//         .object({
+//           question: joi.string().required(),
+//           options: joi.array().items(joi.string().required()).min(2).required(),
+//           activeTill: joi.string().required(),
+//         })
+//         .optional(),
+//     });
+
+//     const { error } = schema.validate(req.body);
+//     if (error) {
+//       await session.abortTransaction();
+//       session.endSession();
+//       return res.status(400).json({
+//         status: false,
+//         message: error.details[0].message,
+//       });
+//     }
+
+//     const user = await User.findById(req.user.id);
+//     if (!user) {
+//       await session.abortTransaction();
+//       session.endSession();
+//       return res.status(404).json({ status: false, message: "User not found" });
+//     }
+
+//     // ✅ 1. Create Event
+//     const newEvent = new Event({
+//       userId: req.user.id,
+//       eventTitle,
+//       invitationMessage,
+//       eventType,
+//       eventCategory,
+//       eventDates,
+//       timeDuration,
+//     });
+
+//     await newEvent.save({ session });
+
+//     // ✅ 2. Save Place Preference + Detail
+//     const placeDoc = {
+//       eventId: newEvent._id,
+//       option: placePreference,
+//     };
+
+//     if (placePreference === "Private location") {
+//       placeDoc.address = placeDetail.address;
+//     } else if (placePreference === "Choose from map") {
+//       placeDoc.coordinates = {
+//         lat: placeDetail.lat,
+//         lng: placeDetail.lng,
+//         formattedAddress: placeDetail.formattedAddress,
+//       };
+//     } else if (placePreference === "Restaurant from list") {
+//       placeDoc.selectedRestaurants = placeDetail.restaurants; // array of { name, placeId, address }
+//     }
+
+//     await EventPreference.create([placeDoc], { session });
+
+//     // ✅ 3. Save Poll (optional)
+//     if (poll) {
+//       const newPoll = new EventPoll({
+//         eventId: newEvent._id,
+//         createdBy: req.user.id,
+//         question: poll.question,
+//         options: poll.options.map((opt) => ({
+//           optionText: opt,
+//           voteCount: 0,
+//         })),
+//         activeTill: poll.activeTill,
+//       });
+
+//       const savedPoll = await newPoll.save({ session });
+
+//       // attach poll ID to event
+//       newEvent.pollId = savedPoll._id;
+//       await newEvent.save({ session });
+//     }
+
+//     await session.commitTransaction();
+//     session.endSession();
+
+//     return res.status(201).json({
+//       status: true,
+//       message: "Event created successfully",
+//       data: {
+//         eventId: newEvent._id,
+//         pollId: newEvent.pollId || null,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error creating event:", err);
+//     await session.abortTransaction();
+//     session.endSession();
+//     return res.status(500).json({
+//       status: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 exports.createEvent = async (req, res) => {
   const session = await Event.startSession();
   session.startTransaction();
@@ -213,112 +349,83 @@ exports.createEvent = async (req, res) => {
   try {
     const {
       eventTitle,
-      invitationMessage,
-      eventType,
-      eventCategory,
-      eventDates,
-      timeDuration,
-      placePreference,
-      placeDetail,
-      poll,
+      eventDescription,
+      eventTypeId,
+      eventCategoryId,
+      eventDate,
+      eventStartTime,
+      eventEndTime,
+      placeId,
+      addressId,
+      contactListIds,
+      bringalongGuest,
+      bringalongGuestNumber,
+      rvsp,
+      rvspDateBy,
+      noteId,
+      amazonGiftUrlId,
+      additionalServiceId,
+      pollId,
     } = req.body;
 
-    // ✅ Schema validation
+    // ✅ Validation schema
     const schema = joi.object({
       eventTitle: joi.string().required(),
-      invitationMessage: joi.string().allow(""),
-      eventType: joi.string().required(),
-      eventCategory: joi.string().required(),
-      eventDates: joi.array().items(joi.date().iso()).min(1).required(),
-      timeDuration: joi
-        .object({
-          startTime: joi.string().required(),
-          endTime: joi.string().required(),
-        })
+      eventDescription: joi.string().required(),
+      eventTypeId: joi.string().required(),
+      eventCategoryId: joi.string().required(),
+      eventDate: joi.string().required(),
+      eventStartTime: joi.string().required(),
+      eventEndTime: joi.string().required(),
+      placeId: joi.string().required(),
+      addressId: joi.string().required(),
+      contactListIds: joi
+        .array()
+        .items(joi.string().required())
+        .min(1)
         .required(),
-      placePreference: joi
-        .string()
-        .valid(...Object.values(preferences))
-        .required(),
-      placeDetail: joi.object().required(),
-      poll: joi
-        .object({
-          question: joi.string().required(),
-          options: joi.array().items(joi.string().required()).min(2).required(),
-          activeTill: joi.string().required(),
-        })
-        .optional(),
+      bringalongGuest: joi.string().valid("Yes", "No").required(),
+      bringalongGuestNumber: joi.string().allow(""),
+      rvsp: joi.string().valid("Yes", "No").required(),
+      rvspDateBy: joi.string().allow(""),
+      noteId: joi.string().allow(""),
+      amazonGiftUrlId: joi.string().allow(""),
+      additionalServiceId: joi.string().allow(""),
+      pollId: joi.string().allow(""),
     });
 
     const { error } = schema.validate(req.body);
     if (error) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(400).json({
-        status: false,
-        message: error.details[0].message,
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
     }
 
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ status: false, message: "User not found" });
-    }
-
-    // ✅ 1. Create Event
     const newEvent = new Event({
       userId: req.user.id,
       eventTitle,
-      invitationMessage,
-      eventType,
-      eventCategory,
-      eventDates,
-      timeDuration,
+      description: eventDescription,
+      eventType: eventTypeId,
+      eventCategory: eventCategoryId,
+      eventDate,
+      eventStartDate: eventStartTime,
+      eventEndDate: eventEndTime,
+      placeId,
+      addressId,
+      contactList: contactListIds,
+      bringaLongGuest: bringalongGuest,
+      bringaLongNumber: bringalongGuestNumber,
+      rvsp,
+      rvspDate: rvspDateBy,
+      noteId: noteId || null,
+      registryUrl: amazonGiftUrlId || null,
+      additionalServices: additionalServiceId || null,
+      pollId: pollId || null,
     });
 
     await newEvent.save({ session });
-
-    // ✅ 2. Save Place Preference + Detail
-    const placeDoc = {
-      eventId: newEvent._id,
-      option: placePreference,
-    };
-
-    if (placePreference === "Private location") {
-      placeDoc.address = placeDetail.address;
-    } else if (placePreference === "Choose from map") {
-      placeDoc.coordinates = {
-        lat: placeDetail.lat,
-        lng: placeDetail.lng,
-        formattedAddress: placeDetail.formattedAddress,
-      };
-    } else if (placePreference === "Restaurant from list") {
-      placeDoc.selectedRestaurants = placeDetail.restaurants; // array of { name, placeId, address }
-    }
-
-    await EventPreference.create([placeDoc], { session });
-
-    // ✅ 3. Save Poll (optional)
-    if (poll) {
-      const newPoll = new EventPoll({
-        eventId: newEvent._id,
-        createdBy: req.user.id,
-        question: poll.question,
-        options: poll.options.map((opt) => ({
-          optionText: opt,
-          voteCount: 0,
-        })),
-        activeTill: poll.activeTill,
-      });
-
-      const savedPoll = await newPoll.save({ session });
-
-      // attach poll ID to event
-      newEvent.pollId = savedPoll._id;
-      await newEvent.save({ session });
-    }
 
     await session.commitTransaction();
     session.endSession();
@@ -326,19 +433,15 @@ exports.createEvent = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Event created successfully",
-      data: {
-        eventId: newEvent._id,
-        pollId: newEvent.pollId || null,
-      },
+      data: { eventId: newEvent._id },
     });
   } catch (err) {
     console.error("Error creating event:", err);
     await session.abortTransaction();
     session.endSession();
-    return res.status(500).json({
-      status: false,
-      message: "Internal server error",
-    });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
 
@@ -352,20 +455,14 @@ exports.eventByUser = async (req, res) => {
       .populate("eventType", "eventType")
       .populate("eventCategory", "category")
       .populate("pollId", "question options activeTill")
+      .populate("placeId")
+      .populate("addressId")
+      .populate("noteId")
+      .populate("registryUrl")
+      .populate("additionalServices")
+      .populate("contactList", "fullName email") // assuming contactList contains userIds
       .exec();
 
-    const eventPreferences = await EventPreference.find({
-      eventId: { $in: events.map((event) => event._id) },
-    })
-      .populate("eventId", "eventTitle")
-      .exec();
-
-    // Attach preferences to each event
-    events.forEach((event) => {
-      event.preferences = eventPreferences
-        .filter((pref) => pref.eventId._id.toString() === event._id.toString())
-        .map((pref) => pref.option);
-    });
     res.status(200).json({
       status: true,
       message: "Events fetched successfully",
@@ -373,6 +470,40 @@ exports.eventByUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching events by user:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.createPoll = async (req, res) => {
+  try {
+    const { question, options, activeTill } = req.body;
+
+    const schema = joi.object({
+      question: joi.string().required(),
+      options: joi.array().items(joi.string().required()).min(2).required(),
+      activeTill: joi.stringrequired(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const newPoll = new EventPoll({
+      createdBy: req.user.id,
+      question,
+      options: options.map((opt) => ({ optionText: opt })),
+      activeTill,
+    });
+
+    const savedPoll = await newPoll.save();
+
+    res
+      .status(201)
+      .json({ status: true, message: "Poll created", data: savedPoll });
+  } catch (err) {
+    console.error("Error creating poll:", err);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
@@ -555,12 +686,10 @@ exports.searchRegistry = async (req, res) => {
       .exec();
 
     if (!registries || registries.length === 0) {
-      return res
-        .status(404)
-        .json({
-          status: false,
-          message: "No registries found matching the query",
-        });
+      return res.status(404).json({
+        status: false,
+        message: "No registries found matching the query",
+      });
     }
 
     res.status(200).json({
@@ -594,14 +723,15 @@ exports.additionalServices = async (req, res) => {
   }
 };
 
-
 exports.placePreferences = async (req, res) => {
   try {
     const preference = await EventPreferences.find()
       .select("preferences")
       .exec();
     if (!preference || preference.length === 0) {
-      return res.status(404).json({ status: false, message: "No prefetences found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "No prefetences found" });
     }
 
     res.status(200).json({
@@ -614,4 +744,3 @@ exports.placePreferences = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-

@@ -10,4 +10,4 @@ const notesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("notes", notesSchema);
+module.exports = mongoose.model("Notes", notesSchema);

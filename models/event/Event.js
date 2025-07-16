@@ -1,4 +1,54 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
+
+// const eventSchema = new mongoose.Schema(
+//   {
+//     userId: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: true,
+//     },
+
+//     eventTitle: {
+//       type: String,
+//       required: true,
+//     },
+
+//     invitationMessage: {
+//       type: String,
+//     },
+
+//     eventType: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "EventType",
+//       required: true,
+//     },
+
+//     eventCategory: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "EventCategory",
+//       required: true,
+//     },
+
+//     eventDates: [
+//       {
+//         type: Date,
+//       },
+//     ],
+
+//     timeDuration: {
+//       startTime: { type: String }, // e.g. "10:00 AM"
+//       endTime: { type: String },   // e.g. "2:00 PM"
+//     },
+
+//     pollId: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Poll",
+//       default: null,
+//     },
+//   },
+//   { timestamps: true }
+// );
 
 const eventSchema = new mongoose.Schema(
   {
@@ -8,13 +58,19 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
 
-    eventTitle: {
+    eventDate: {
       type: String,
       required: true,
     },
 
-    invitationMessage: {
+    eventStartDate: {
       type: String,
+      required: true,
+    },
+
+    eventEndDate: {
+      type: String,
+      required: true,
     },
 
     eventType: {
@@ -29,15 +85,72 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
 
-    eventDates: [
+    eventTitle: {
+      type: String,
+      required: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+    },
+
+    placeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PlacePreferenses",
+      required: true,
+    },
+
+    addressId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+      required: true,
+    },
+
+    contactList: [
       {
-        type: Date,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
       },
     ],
 
-    timeDuration: {
-      startTime: { type: String }, // e.g. "10:00 AM"
-      endTime: { type: String },   // e.g. "2:00 PM"
+    bringaLongGuest: {
+      type: String,
+      enum: ["Yes", "No"],
+      required: true,
+    },
+
+    bringaLongGuest: {
+      type: String,
+    },
+
+    rvsp: {
+      type: String,
+      enum: ["Yes", "No"],
+      required: true,
+    },
+
+    rvspDate: {
+      type: String,
+    },
+
+    noteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Notes",
+      required: true,
+    },
+
+    registryUrl: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Registry",
+      required: true,
+    },
+
+    additionalServices: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdditionalService",
+      required: true,
     },
 
     pollId: {

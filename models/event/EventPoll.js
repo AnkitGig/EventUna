@@ -2,11 +2,6 @@ const mongoose = require("mongoose");
 
 const pollSchema = new mongoose.Schema(
   {
-    eventId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Event",
-      required: true,
-    },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
