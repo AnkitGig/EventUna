@@ -158,6 +158,11 @@ const eventSchema = new mongoose.Schema(
       ref: "Poll",
       default: null,
     },
+    image:{
+      type: String,
+      default: null
+
+    }
   },
   { timestamps: true }
 );
