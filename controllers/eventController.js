@@ -343,6 +343,7 @@ exports.eventNotes = async (req, res) => {
 // };
 
 exports.createEvent = async (req, res) => {
+  console.log("Creating event...");
   const session = await Event.startSession();
   session.startTransaction();
 
