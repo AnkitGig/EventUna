@@ -346,9 +346,12 @@ exports.createEvent = async (req, res) => {
   const session = await Event.startSession();
   session.startTransaction();
 
-
-
   try {
+    // ✅ Parse contactListIds if sent as JSON string
+    if (req.body.contactListIds && typeof req.body.contactListIds === 'string') {
+      req.body.contactListIds = JSON.parse(req.body.contactListIds);
+    }
+
     const {
       eventTitle,
       eventDescription,
@@ -381,9 +384,7 @@ exports.createEvent = async (req, res) => {
       eventEndTime: joi.string().required(),
       placeId: joi.string().required(),
       addressId: joi.string().required(),
-      contactListIds: joi.any().required().messages({
-        "any.required": "contactListIds is required",
-      }),
+      contactListIds: joi.array().items(joi.string().required()).min(1).required(),
 
       bringalongGuest: joi.string().valid("Yes", "No").required(),
       bringalongGuestNumber: joi.string().allow(""),
@@ -399,9 +400,7 @@ exports.createEvent = async (req, res) => {
     if (error) {
       await session.abortTransaction();
       session.endSession();
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
+      return res.status(400).json({ status: false, message: error.details[0].message });
     }
 
     const newEvent = new Event({
@@ -437,15 +436,15 @@ exports.createEvent = async (req, res) => {
       message: "Event created successfully",
       data: { eventId: newEvent._id },
     });
+
   } catch (err) {
     console.error("Error creating event:", err);
     await session.abortTransaction();
     session.endSession();
-    return res
-      .status(500)
-      .json({ status: false, message: "Internal server error" });
+    return res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
 
 exports.getEvents = async (req, res) => {
   try {
