@@ -163,6 +163,12 @@ const eventSchema = new mongoose.Schema(
       default: null
 
     }
+    ,
+    status: {
+      type: String,
+      enum: ["upcoming", "ongoing", "completed", "cancelled"],
+      default: "upcoming"
+    }
   },
   { timestamps: true }
 );
