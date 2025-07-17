@@ -346,6 +346,8 @@ exports.createEvent = async (req, res) => {
   const session = await Event.startSession();
   session.startTransaction();
 
+
+
   try {
     const {
       eventTitle,
@@ -379,11 +381,10 @@ exports.createEvent = async (req, res) => {
       eventEndTime: joi.string().required(),
       placeId: joi.string().required(),
       addressId: joi.string().required(),
-      contactListIds: joi
-        .array()
-        .items(joi.string().required())
-        .min(1)
-        .required(),
+      contactListIds: joi.any().required().messages({
+        "any.required": "contactListIds is required",
+      }),
+
       bringalongGuest: joi.string().valid("Yes", "No").required(),
       bringalongGuestNumber: joi.string().allow(""),
       rvsp: joi.string().valid("Yes", "No").required(),
@@ -423,6 +424,7 @@ exports.createEvent = async (req, res) => {
       registryUrl: amazonGiftUrlId || null,
       additionalServices: additionalServiceId || null,
       pollId: pollId || null,
+      image: req.file ? req.file.filename : null,
     });
 
     await newEvent.save({ session });
@@ -458,6 +460,13 @@ exports.getEvents = async (req, res) => {
       .populate("additionalServices")
       .populate("contactList", "fullName email")
       .exec();
+
+       events.map((item) => {
+      item.image = item.image
+        ? `${process.env.BASE_URL}/event/${item.image}`
+        : `${process.env.DEFAULT_EVENT_PIC}`;
+    });
+    
     res.status(200).json({
       status: true,
       message: "Events fetched successfully",
@@ -474,7 +483,9 @@ exports.getEventById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ status: false, message: "Event ID is required" });
+      return res
+        .status(400)
+        .json({ status: false, message: "Event ID is required" });
     }
     const event = await Event.findById(id)
       .populate("eventType", "eventType")
@@ -488,8 +499,12 @@ exports.getEventById = async (req, res) => {
       .populate("contactList", "fullName email")
       .exec();
     if (!event) {
-      return res.status(404).json({ status: false, message: "Event not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Event not found" });
     }
+
+    event.image = event.image? `${process.env.BASE_URL}/event/${event.image}`: `${process.env.DEFAULT_EVENT_PIC}`
     res.status(200).json({
       status: true,
       message: "Event fetched successfully",
@@ -500,7 +515,6 @@ exports.getEventById = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-
 
 exports.eventByUser = async (req, res) => {
   try {
@@ -519,6 +533,12 @@ exports.eventByUser = async (req, res) => {
       .populate("additionalServices")
       .populate("contactList", "fullName email") // assuming contactList contains userIds
       .exec();
+
+    events.map((item) => {
+      item.image = item.image
+        ? `${process.env.BASE_URL}/event/${item.image}`
+        : `${process.env.DEFAULT_EVENT_PIC}`;
+    });
 
     res.status(200).json({
       status: true,

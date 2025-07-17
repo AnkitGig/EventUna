@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
 });
 
 
-const storage2 = multer.diskStorage({
+const storageServices = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './public/services');
   },
@@ -19,7 +19,21 @@ const storage2 = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
-const upload2 = multer({ storage2 });
 
-module.exports = { upload, upload2 };
+const storageEvent = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/event');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+
+
+const upload = multer({ storage });
+const uploadServices = multer({ storage: storageServices });
+const uploadEvent = multer({ storage: storageEvent });
+
+
+module.exports = { upload, uploadServices, uploadEvent };

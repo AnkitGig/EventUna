@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const event = require('../controllers/eventController');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
+const { uploadEvent } = require("../middleware/multer")
 
 
 
@@ -10,7 +11,7 @@ router.post('/event-category', event.addEventCategory);
 router.get('/event-type', event.allEventType);
 router.get('/event-category/:id', event.categoryByEventType);
 router.get('/place-preferences', event.placePreferences);
-router.post('/create-event', protect, event.createEvent)
+router.post('/create-event', protect, uploadEvent.single("image"), event.createEvent)
 router.get('/event-user', protect, event.eventByUser);
 router.patch('/event-poll-vote', protect, event.voteOrUnvotePoll);
 router.get('/notes', protect, event.eventNotes)

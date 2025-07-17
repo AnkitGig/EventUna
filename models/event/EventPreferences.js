@@ -5,7 +5,7 @@ const placePreferencesSchema = new mongoose.Schema(
     preferences: {
       type: String,
       required: true,
-      unique: true,   // 👈 This will make the serviceName unique
+      unique: true,   // 👈 This will make the placepreference unique
       trim: true,
     },
   },
