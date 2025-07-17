@@ -135,11 +135,13 @@ const eventSchema = new mongoose.Schema(
       type: String,
     },
 
-    noteId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Notes",
-      required: true,
-    },
+    noteId: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Notes",
+        required: true,
+      },
+    ],
 
     registryUrl: {
       type: mongoose.Schema.Types.ObjectId,
@@ -147,22 +149,23 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
 
-    additionalServices: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "AdditionalService",
-      required: true,
-    },
+    additionalServices: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "AdditionalService",
+        required: true,
+      },
+    ],
 
     pollId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Poll",
       default: null,
     },
-    image:{
+    image: {
       type: String,
-      default: null
-
-    }
+      default: null,
+    },
   },
   { timestamps: true }
 );

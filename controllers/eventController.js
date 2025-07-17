@@ -347,10 +347,15 @@ exports.createEvent = async (req, res) => {
   session.startTransaction();
 
   try {
-    // ✅ Parse contactListIds if sent as JSON string
-    if (req.body.contactListIds && typeof req.body.contactListIds === 'string') {
-      req.body.contactListIds = JSON.parse(req.body.contactListIds);
-    }
+    // ✅ Utility to safely parse JSON arrays from form-data
+    const parseJsonArray = (field) => {
+      if (!req.body[field]) return [];
+      return typeof req.body[field] === "string" ? JSON.parse(req.body[field]) : req.body[field];
+    };
+
+    const contactListIds = parseJsonArray("contactListIds");
+    const noteIds = parseJsonArray("noteIds");
+    const additionalServiceIds = parseJsonArray("additionalServiceIds");
 
     const {
       eventTitle,
@@ -362,18 +367,15 @@ exports.createEvent = async (req, res) => {
       eventEndTime,
       placeId,
       addressId,
-      contactListIds,
       bringalongGuest,
       bringalongGuestNumber,
       rvsp,
       rvspDateBy,
-      noteId,
       amazonGiftUrlId,
-      additionalServiceId,
       pollId,
     } = req.body;
 
-    // ✅ Validation schema
+    // ✅ Validation Schema
     const schema = joi.object({
       eventTitle: joi.string().required(),
       eventDescription: joi.string().required(),
@@ -385,24 +387,44 @@ exports.createEvent = async (req, res) => {
       placeId: joi.string().required(),
       addressId: joi.string().required(),
       contactListIds: joi.array().items(joi.string().required()).min(1).required(),
-
+      noteIds: joi.array().items(joi.string().required()).min(1).required(),
+      additionalServiceIds: joi.array().items(joi.string().required()).min(1).required(),
       bringalongGuest: joi.string().valid("Yes", "No").required(),
       bringalongGuestNumber: joi.string().allow(""),
       rvsp: joi.string().valid("Yes", "No").required(),
       rvspDateBy: joi.string().allow(""),
-      noteId: joi.string().allow(""),
       amazonGiftUrlId: joi.string().allow(""),
-      additionalServiceId: joi.string().allow(""),
       pollId: joi.string().allow(""),
     });
 
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate({
+      eventTitle,
+      eventDescription,
+      eventTypeId,
+      eventCategoryId,
+      eventDate,
+      eventStartTime,
+      eventEndTime,
+      placeId,
+      addressId,
+      contactListIds,
+      noteIds,
+      additionalServiceIds,
+      bringalongGuest,
+      bringalongGuestNumber,
+      rvsp,
+      rvspDateBy,
+      amazonGiftUrlId,
+      pollId,
+    });
+
     if (error) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({ status: false, message: error.details[0].message });
     }
 
+    // ✅ Create new Event Document
     const newEvent = new Event({
       userId: req.user.id,
       eventTitle,
@@ -419,9 +441,9 @@ exports.createEvent = async (req, res) => {
       bringaLongNumber: bringalongGuestNumber,
       rvsp,
       rvspDate: rvspDateBy,
-      noteId: noteId || null,
+      noteId: noteIds,
       registryUrl: amazonGiftUrlId || null,
-      additionalServices: additionalServiceId || null,
+      additionalServices: additionalServiceIds,
       pollId: pollId || null,
       image: req.file ? req.file.filename : null,
     });
@@ -460,12 +482,12 @@ exports.getEvents = async (req, res) => {
       .populate("contactList", "fullName email")
       .exec();
 
-       events.map((item) => {
+    events.map((item) => {
       item.image = item.image
         ? `${process.env.BASE_URL}/event/${item.image}`
         : `${process.env.DEFAULT_EVENT_PIC}`;
     });
-    
+
     res.status(200).json({
       status: true,
       message: "Events fetched successfully",
@@ -503,7 +525,9 @@ exports.getEventById = async (req, res) => {
         .json({ status: false, message: "Event not found" });
     }
 
-    event.image = event.image? `${process.env.BASE_URL}/event/${event.image}`: `${process.env.DEFAULT_EVENT_PIC}`
+    event.image = event.image
+      ? `${process.env.BASE_URL}/event/${event.image}`
+      : `${process.env.DEFAULT_EVENT_PIC}`;
     res.status(200).json({
       status: true,
       message: "Event fetched successfully",
