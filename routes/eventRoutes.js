@@ -19,6 +19,8 @@ router.get('/registry', protect, event.registryByUser);
 router.get('/registry/search', protect, event.searchRegistry)
 router.get('/additional-services', protect, event.additionalServices)
 router.post("/poll", protect, event.createPoll)
+router.get('/events', protect, event.getEvents);
+router.get('/events/:id', protect, event.getEventById);
 
 
 

@@ -445,6 +445,63 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+exports.getEvents = async (req, res) => {
+  try {
+    const events = await Event.find()
+      .populate("eventType", "eventType")
+      .populate("eventCategory", "category")
+      .populate("pollId", "question options activeTill")
+      .populate("placeId")
+      .populate("addressId")
+      .populate("noteId")
+      .populate("registryUrl")
+      .populate("additionalServices")
+      .populate("contactList", "fullName email")
+      .exec();
+    res.status(200).json({
+      status: true,
+      message: "Events fetched successfully",
+      data: events,
+    });
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// Get event by ID
+exports.getEventById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ status: false, message: "Event ID is required" });
+    }
+    const event = await Event.findById(id)
+      .populate("eventType", "eventType")
+      .populate("eventCategory", "category")
+      .populate("pollId", "question options activeTill")
+      .populate("placeId")
+      .populate("addressId")
+      .populate("noteId")
+      .populate("registryUrl")
+      .populate("additionalServices")
+      .populate("contactList", "fullName email")
+      .exec();
+    if (!event) {
+      return res.status(404).json({ status: false, message: "Event not found" });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Event fetched successfully",
+      data: event,
+    });
+  } catch (error) {
+    console.error("Error fetching event by ID:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+
 exports.eventByUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
