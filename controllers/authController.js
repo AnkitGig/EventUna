@@ -371,7 +371,7 @@ exports.getUserProfile = async (req, res) => {
         ? `${process.env.BASE_URL}/profile/${user.profilePic}`
         : process.env.DEFAULT_PROFILE_PIC;
 
-      user.gender = user.gender.toUpperCase();
+      user.gender = user.gender ? user.gender.toUpperCase() : null;
 
       return res.status(200).json({ status: true, user });
     }
