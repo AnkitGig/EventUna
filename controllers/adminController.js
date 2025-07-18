@@ -3,6 +3,7 @@ const Services = require(`../models/merchant/Services`);
 const Merchant = require(`../models/merchant/Merchant`);
 const Notes = require(`../models/event/EventNotes`);
 const AddtionalServices = require(`../models/event/EventAdditionalServices`);
+const SubServices = require(`../models/merchant/Subservices`);
 const Preferences = require(`../models/event/EventPreferences`);
 const joi = require("joi");
 
@@ -233,10 +234,9 @@ exports.placePreferences = async (req, res) => {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-
-       // Create new note
+    // Create new note
     const newPreference = new Preferences({
-      preferences: preference ,
+      preferences: preference,
     });
 
     // Save note to database
@@ -244,9 +244,51 @@ exports.placePreferences = async (req, res) => {
 
     res
       .status(201)
-      .json({ statue: true, message: "Preference added successfully", preference: preference });
+      .json({
+        statue: true,
+        message: "Preference added successfully",
+        preference: preference,
+      });
   } catch (error) {
     console.error("Error while adding place preferences :", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+exports.subServices = async (req, res) => {
+  try {
+    const { subService, serviceId } = req.body;
+
+    const schema = joi.object({
+      subService: joi.string().required(),
+      serviceId: joi.string().required(),
+    });
+
+    const { error } = schema.validate( req.body );
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    // Create new note
+    const subServices = new SubServices({
+      subServicesName: subService,
+      serviceId
+    });
+
+    // Save note to database
+    await subServices.save();
+
+    res
+      .status(201)
+      .json({
+        statue: true,
+        message: "subservices added successfully",
+        preference: subServices,
+      });
+  } catch (error) {
+    console.error("Error while adding sub-services preferences :", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// exports.subServices = async(req,res)

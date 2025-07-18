@@ -12,6 +12,7 @@ router.post("/add-notes", protect, isAdmin, admin.addNotes)
 router.get("/all-users", protect, isAdmin, admin.allUsers)
 router.post("/additional-services", protect, isAdmin, admin.addAdditionalServices)
 router.post("/place-preference",protect, isAdmin, admin.placePreferences)
+router.post("/add-subservices", protect, isAdmin,admin.subServices)
 // router.
 
 
