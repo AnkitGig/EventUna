@@ -6,7 +6,7 @@ const {protect} = require("../middleware/authMiddleware");
 router.post("/signup", merchant.signup)
 router.post("/verify-otp", merchant.verifyOtp)
 router.post("/login", merchant.login)
-router.get("/services", protect, merchant.services)
+router.get("/services", merchant.services)
 
 
 

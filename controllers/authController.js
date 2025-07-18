@@ -415,7 +415,7 @@ exports.deleteUser = async (req, res) => {
 
 exports.addAddress = async (req, res) => {
   try {
-    const {addressName, address1, address2, postcode } = req.body;
+    const { addressName, address1, address2, postcode } = req.body;
     const schema = joi.object({
       addressName: joi.string().required(),
       address1: joi.string().required(),
