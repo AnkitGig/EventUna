@@ -7,7 +7,7 @@ router.post("/signup", merchant.signup)
 router.post("/verify-otp", merchant.verifyOtp)
 router.post("/login", merchant.login)
 router.get("/services", merchant.services)
-router.get("/sub-services/:id", merchant.subServices)
+router.get("/sub-services", merchant.subServices)
 
 
 

@@ -1,19 +1,18 @@
 const Merchant = require("../models/merchant/Merchant");
 const Services = require("../models/merchant/Services");
-const Subservices = require("../models/merchant/Subservices")
+const Subservices = require("../models/merchant/Subservices");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const { generateOtp } = require("../utils/otp");
 const joi = require("joi");
 
-
 const isMerchant = (req, res) => {
   if (req.user && req.user.role === "merchant") {
     return true;
   }
   return false;
-}
+};
 // Signup
 exports.signup = async (req, res) => {
   try {
@@ -32,14 +31,8 @@ exports.signup = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
-    const {
-      email,
-      mobile,
-      password,
-      serviceId,
-      register_id,
-      ios_register_id,
-    } = req.body;
+    const { email, mobile, password, serviceId, register_id, ios_register_id } =
+      req.body;
 
     const existingUser = await Merchant.findOne({
       $or: [{ email }, { mobile }],
@@ -148,14 +141,11 @@ exports.resendOtp = async (req, res) => {
 
     console.log(`Resend OTP ${otp} to mobile: ${user.mobile}`);
     res.json({ status: true, message: "OTP resent successfully" });
-    
   } catch (error) {
     console.error("Error during OTP resend:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
-    
   }
-}
-
+};
 
 exports.login = async (req, res) => {
   try {
@@ -172,9 +162,7 @@ exports.login = async (req, res) => {
         .json({ status: false, message: error.details[0].message });
 
     const { email, password, register_id, ios_register_id } = req.body;
-     
 
- 
     const user = await Merchant.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res
@@ -215,54 +203,58 @@ exports.login = async (req, res) => {
   }
 };
 
-
-exports.services= async(req, res)=>{
+exports.services = async (req, res) => {
   try {
-
     const merchantReponse = await isMerchant(req, res);
     console.log(`Merchant Reponse: ${merchantReponse}`);
-    
+
     const services = await Services.find({});
     if (!services || services.length === 0) {
-      return res.status(404).json({ status: false, message: "No services found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "No services found" });
     }
-    
-    res.status(200).json({ status: true, message: "Services fetched successfully", services });
-    
+
+    res.status(200).json({
+      status: true,
+      message: "Services fetched successfully",
+      services,
+    });
   } catch (error) {
     console.error("Error fetching services:", error);
-    res.status(500).json({ status: false, message: "Internal server error"})
-    
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
 
-
-exports.subServices= async(req, res)=>{
+exports.subServices = async (req, res) => {
   try {
-
-    const {id} = req.params
+    const { id } = req.query;
 
     const schema = joi.object({
       id: joi.string().required(),
     });
-    const { error } = schema.validate({id});
+    const { error } = schema.validate({ id });
     if (error)
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-    
+
     const services = await Subservices.find({
-      serviceId: id
-    });
+      serviceId: id,
+    }).select("_id subServicesName serviceId");
     if (!services || services.length === 0) {
-      return res.status(404).json({ status: false, message: "No services found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "No services found" });
     }
-    
-    res.status(200).json({ status: true, message: "subservices fetched successfully", services });
-    
+
+    res.status(200).json({
+      status: true,
+      message: "subservices fetched successfully",
+      services,
+    });
   } catch (error) {
     console.error("Error fetching services:", error);
-    res.status(500).json({ status: false, message: "Internal server error"})
-    
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
