@@ -31,7 +31,8 @@ exports.signup = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
-    const {
+
+    let {
       email,
       mobile,
       password,
@@ -39,6 +40,9 @@ exports.signup = async (req, res) => {
       register_id,
       ios_register_id,
     } = req.body;
+
+    // Always store email in lowercase
+    email = email.toLowerCase();
 
     const existingUser = await Merchant.findOne({
       $or: [{ email }, { mobile }],
@@ -170,10 +174,11 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
-    const { email, password, register_id, ios_register_id } = req.body;
-     
+    let { email, password, register_id, ios_register_id } = req.body;
 
- 
+    // Always use lowercase for email
+    email = email.toLowerCase();
+
     const user = await Merchant.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res
