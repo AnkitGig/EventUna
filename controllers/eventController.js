@@ -7,8 +7,13 @@ const EventPollVote = require("../models/event/EventPollVote");
 const EventRegistry = require("../models/event/EventRegistry");
 const Event = require("../models/event/Event");
 const EventPreference = require("../models/event/EventPreference");
+const Notification = require("../models/notifications/Notification");
 const EventPreferences = require("../models/event/EventPreferences");
-
+const {
+  sendPushNotification,
+  saveNotifications,
+} = require("../services/firbase/notifications");
+const { parseJsonArray } = require("../utils/helpers");
 // const EventAddtionalServices = require("../models/event/EventAdditionalServices");
 const User = require("../models/user/User");
 const joi = require("joi");
@@ -348,14 +353,14 @@ exports.createEvent = async (req, res) => {
 
   try {
     // ✅ Utility to safely parse JSON arrays from form-data
-    const parseJsonArray = (field) => {
-      if (!req.body[field]) return [];
-      return typeof req.body[field] === "string" ? JSON.parse(req.body[field]) : req.body[field];
-    };
+    // const parseJsonArray = (field) => {
+    //   if (!req.body[field]) return [];
+    //   return typeof req.body[field] === "string" ? JSON.parse(req.body[field]) : req.body[field];
+    // };
 
-    const contactListIds = parseJsonArray("contactListIds");
-    const noteIds = parseJsonArray("noteIds");
-    const additionalServiceIds = parseJsonArray("additionalServiceIds");
+    const contactListIds = parseJsonArray("contactListIds", req);
+    const noteIds = parseJsonArray("noteIds", req);
+    const additionalServiceIds = parseJsonArray("additionalServiceIds", req);
 
     const {
       eventTitle,
@@ -375,7 +380,7 @@ exports.createEvent = async (req, res) => {
       pollId,
     } = req.body;
 
-    // ✅ Validation Schema
+    // // ✅ Validation Schema
     const schema = joi.object({
       eventTitle: joi.string().required(),
       eventDescription: joi.string().required(),
@@ -424,7 +429,7 @@ exports.createEvent = async (req, res) => {
       return res.status(400).json({ status: false, message: error.details[0].message });
     }
 
-    // ✅ Create new Event Document
+    // // ✅ Create new Event Document
     const newEvent = new Event({
       userId: req.user.id,
       eventTitle,
@@ -450,23 +455,47 @@ exports.createEvent = async (req, res) => {
 
     await newEvent.save({ session });
 
-    await session.commitTransaction();
-    session.endSession();
+    const contacts = await User.find({
+      _id: { $in: contactListIds },
+      ios_register_id: { $ne: null },
+    }).select("ios_register_id fullName");
+
+    await Promise.all(
+      contacts.map((contact) =>
+        sendPushNotification(
+          contact.ios_register_id,
+          "You're Invited!",
+          `${req.user.fullName || "A friend"} invited you to: ${eventTitle}`,
+          // { eventId: "6878f530361a8679edfbd25c" }
+          { eventId: newEvent._id.toString() }
+        )
+      )
+    );
+
+    await saveNotifications(
+      req.user.id,
+      "You're Invited!",
+      `${req.user.fullName || "A friend"} invited you to: ${eventTitle}`,
+      { eventId: "6878f530361a8679edfbd25c" }
+    );
+
+    // await session.commitTransaction();
+    // session.endSession();
 
     return res.status(201).json({
       status: true,
       message: "Event created successfully",
-      data: { eventId: newEvent._id },
+      data: "{ eventId: newEvent._id }",
     });
-
   } catch (err) {
     console.error("Error creating event:", err);
-    await session.abortTransaction();
-    session.endSession();
-    return res.status(500).json({ status: false, message: "Internal server error" });
+    // await session.abortTransaction();
+    // session.endSession();
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
-
 
 exports.getEvents = async (req, res) => {
   try {

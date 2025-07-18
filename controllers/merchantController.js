@@ -21,6 +21,7 @@ exports.signup = async (req, res) => {
       email: joi.string().email().required(),
       mobile: joi.string().min(10).max(15).required(),
       password: joi.string().min(6).required(),
+      serviceId: joi.string().required(),
       register_id: joi.string().optional(),
       ios_register_id: joi.string().optional(),
     });
@@ -34,6 +35,7 @@ exports.signup = async (req, res) => {
       email,
       mobile,
       password,
+      serviceId,
       register_id,
       ios_register_id,
     } = req.body;
@@ -68,6 +70,7 @@ exports.signup = async (req, res) => {
       mobile,
       password: hashedPassword,
       otp,
+      serviceId,
       register_id: register_id || null,
       ios_register_id: ios_register_id || null,
     });
