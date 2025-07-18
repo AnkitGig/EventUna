@@ -245,8 +245,7 @@ exports.services= async(req, res)=>{
 exports.subServices= async(req, res)=>{
   try {
 
-    const {id} = req.params
-
+  const { id } = req.query;
     const schema = joi.object({
       id: joi.string().required(),
     });
@@ -258,7 +257,7 @@ exports.subServices= async(req, res)=>{
     
     const services = await Subservices.find({
       serviceId: id
-    });
+    }).select("id subServicesName serviceId")
     if (!services || services.length === 0) {
       return res.status(404).json({ status: false, message: "No services found" });
     }
