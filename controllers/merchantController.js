@@ -1,5 +1,6 @@
 const Merchant = require("../models/merchant/Merchant");
 const Services = require("../models/merchant/Services");
+const Subservices = require("../models/merchant/Subservices")
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -204,6 +205,7 @@ exports.login = async (req, res) => {
       token,
       userId: user._id,
       role: user.role,
+      isActive: user.isActive,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
     });
@@ -226,6 +228,37 @@ exports.services= async(req, res)=>{
     }
     
     res.status(200).json({ status: true, message: "Services fetched successfully", services });
+    
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    res.status(500).json({ status: false, message: "Internal server error"})
+    
+  }
+}
+
+
+exports.subServices= async(req, res)=>{
+  try {
+
+    const {id} = req.params
+
+    const schema = joi.object({
+      id: joi.string().required(),
+    });
+    const { error } = schema.validate({id});
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+    
+    const services = await Subservices.find({
+      serviceId: id
+    });
+    if (!services || services.length === 0) {
+      return res.status(404).json({ status: false, message: "No services found" });
+    }
+    
+    res.status(200).json({ status: true, message: "subservices fetched successfully", services });
     
   } catch (error) {
     console.error("Error fetching services:", error);
