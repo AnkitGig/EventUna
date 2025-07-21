@@ -551,3 +551,70 @@ exports.getCouponList = async (req, res) => {
     })
   }
 }
+
+exports.getMerchantProfile = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+
+    const merchant = await Merchant.findById(merchantId)
+      .select("-password -otp")
+      .populate("serviceId", "servicesName")
+      .populate("serviceSubcategoryIds", "subServicesName")
+      .populate("serviceLocationIds")
+      .populate("serviceRestaurantCategoryIds", "categoryName description")
+      .populate("couponIds")
+      .exec()
+
+    if (!merchant) {
+      return res.status(404).json({
+        status: false,
+        message: "Merchant not found",
+      })
+    }
+
+    // Add full URLs for images
+    const profileData = merchant.toObject()
+
+    if (profileData.businessRegistrationImage) {
+      profileData.businessRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.businessRegistrationImage}`
+    }
+
+    if (profileData.vatRegistrationImage) {
+      profileData.vatRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.vatRegistrationImage}`
+    }
+
+    if (profileData.otherImage) {
+      profileData.otherImage = `${process.env.BASE_URL}/merchant/documents/${profileData.otherImage}`
+    }
+
+    if (profileData.bannerImage) {
+      profileData.bannerImage = `${process.env.BASE_URL}/merchant/banners/${profileData.bannerImage}`
+    }
+
+    // Add full URLs for location media
+    if (profileData.serviceLocationIds && profileData.serviceLocationIds.length > 0) {
+      profileData.serviceLocationIds = profileData.serviceLocationIds.map((location) => {
+        if (location.locationPhotoVideoList && location.locationPhotoVideoList.length > 0) {
+          location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
+            ...media,
+            url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
+          }))
+        }
+        return location
+      })
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Merchant profile retrieved successfully",
+      data: profileData,
+    })
+  } catch (error) {
+    console.error("Error getting merchant profile:", error)
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    })
+  }
+}
+

@@ -36,5 +36,6 @@ router.get("/location/:locationId", protect, merchant.getServiceLocation)
 
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.get("/coupons", protect, merchant.getCouponList)
+router.get("/profile", protect, merchant.getMerchantProfile)
 
 module.exports = router
