@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const merchantSchema = new mongoose.Schema(
   {
@@ -16,8 +16,54 @@ const merchantSchema = new mongoose.Schema(
     },
     register_id: { type: String, default: null },
     ios_register_id: { type: String, default: null },
-  },
-  { timestamps: true }
-);
 
-module.exports = mongoose.model("Merchant", merchantSchema);
+    // Profile Information
+    serviceSubcategoryIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subervices",
+      },
+    ],
+    serviceName: String,
+    serviceDescription: String,
+    webUrl: String,
+    cuisineName: String,
+    menuUrl: String,
+    phone: String,
+    onlineReservation: { type: Boolean, default: false },
+
+    // Images
+    businessRegistrationImage: String,
+    vatRegistrationImage: String,
+    otherImage: String,
+    bannerImage: String,
+
+    // Business Details
+    commercialPermitNumber: String,
+    vatNumber: String,
+    serviceSlogan: String,
+
+    // References
+    serviceLocationIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ServiceLocation",
+      },
+    ],
+    serviceRestaurantCategoryIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RestaurantCategory",
+      },
+    ],
+    couponIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon",
+      },
+    ],
+  },
+  { timestamps: true },
+)
+
+module.exports = mongoose.model("Merchant", merchantSchema)
