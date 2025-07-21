@@ -29,6 +29,7 @@ exports.signup = async (req, res) => {
       email: joi.string().email().required(),
       mobile: joi.string().min(10).max(15).required(),
       password: joi.string().min(6).required(),
+      countryCode: joi.string().optional(),
       role: joi.string().optional(),
       register_id: joi.string().optional(),
       ios_register_id: joi.string().optional(),
@@ -44,11 +45,13 @@ exports.signup = async (req, res) => {
       email,
       mobile,
       password,
+      countryCode,
       role,
       register_id,
       ios_register_id,
     } = req.body;
 
+    const userCountryCode = countryCode || '+91';
     const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
     if (existingUser) {
       if (existingUser.isVerified == false) {
@@ -78,6 +81,7 @@ exports.signup = async (req, res) => {
       mobile,
       password: hashedPassword,
       otp,
+      countryCode: userCountryCode,
       role: role || "user",
       register_id: register_id || null,
       ios_register_id: ios_register_id || null,
