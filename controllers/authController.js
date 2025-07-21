@@ -204,7 +204,7 @@ exports.forgotPassword = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
-    const { email } = req.body;
+      const email = req.body.email.toLowerCase();
 
     const user = await User.findOne({ email });
     if (!user)
