@@ -379,6 +379,29 @@ exports.updateServiceLocation = async (req, res) => {
     const { locationId } = req.params
     const merchantId = req.user.id
 
+    console.log("Request body:", req.body)
+    console.log("Request files:", req.files)
+
+    // Parse weeklySchedule if it's a string
+    let parsedWeeklySchedule = null
+    if (req.body.weeklySchedule) {
+      try {
+        parsedWeeklySchedule =
+          typeof req.body.weeklySchedule === "string" ? JSON.parse(req.body.weeklySchedule) : req.body.weeklySchedule
+      } catch (parseError) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid weeklySchedule format. Must be valid JSON array.",
+        })
+      }
+    }
+
+    // Create validation object with parsed schedule
+    const validationData = {
+      ...req.body,
+      weeklySchedule: parsedWeeklySchedule,
+    }
+
     const schema = joi.object({
       capacity: joi.number().optional(),
       floorPlan: joi.string().optional(),
@@ -410,7 +433,7 @@ exports.updateServiceLocation = async (req, res) => {
       photoDescription: joi.string().optional(),
     })
 
-    const { error } = schema.validate(req.body)
+    const { error } = schema.validate(validationData)
     if (error) {
       return res.status(400).json({
         status: false,
@@ -419,6 +442,11 @@ exports.updateServiceLocation = async (req, res) => {
     }
 
     const updateData = { ...req.body }
+
+    // Use parsed schedule in update data
+    if (parsedWeeklySchedule) {
+      updateData.weeklySchedule = parsedWeeklySchedule
+    }
 
     // Handle media uploads
     if (req.files && req.files.length > 0) {
