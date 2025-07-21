@@ -5,6 +5,7 @@ const ServiceLocation = require("../models/merchant/ServiceLocation")
 const Coupon = require("../models/merchant/Coupon")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const { deleteOldImages } = require("../utils/helpers")
 
 const { generateOtp } = require("../utils/otp")
 const joi = require("joi")
@@ -226,13 +227,16 @@ exports.updateServiceProfile = async (req, res) => {
   try {
     const merchantId = req.user.id
 
+    console.log("Request body:", req.body)
+    console.log("Request files:", req.files)
+
     const schema = joi.object({
       serviceSubcategoryIds: joi.string().optional(),
       serviceName: joi.string().optional(),
       serviceDescription: joi.string().optional(),
-      webUrl: joi.string().uri().optional(),
+      webUrl: joi.string().uri().optional().allow(""),
       cuisineName: joi.string().optional(),
-      menuUrl: joi.string().uri().optional(),
+      menuUrl: joi.string().uri().optional().allow(""),
       phone: joi.string().optional(),
       onlineReservation: joi.boolean().optional(),
       commercialPermitNumber: joi.string().optional(),
@@ -248,6 +252,15 @@ exports.updateServiceProfile = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: error.details[0].message,
+      })
+    }
+
+    // Get current merchant data to handle old file deletion
+    const currentMerchant = await Merchant.findById(merchantId)
+    if (!currentMerchant) {
+      return res.status(404).json({
+        status: false,
+        message: "Merchant not found",
       })
     }
 
@@ -267,18 +280,30 @@ exports.updateServiceProfile = async (req, res) => {
       updateData.couponIds = req.body.couponIds.split(",")
     }
 
-    // Handle file uploads
+    // Handle file uploads and delete old files
     if (req.files) {
       if (req.files.businessRegistrationImage) {
+        if (currentMerchant.businessRegistrationImage) {
+          deleteOldImages("merchant/documents", currentMerchant.businessRegistrationImage)
+        }
         updateData.businessRegistrationImage = req.files.businessRegistrationImage[0].filename
       }
       if (req.files.vatRegistrationImage) {
+        if (currentMerchant.vatRegistrationImage) {
+          deleteOldImages("merchant/documents", currentMerchant.vatRegistrationImage)
+        }
         updateData.vatRegistrationImage = req.files.vatRegistrationImage[0].filename
       }
       if (req.files.otherImage) {
+        if (currentMerchant.otherImage) {
+          deleteOldImages("merchant/documents", currentMerchant.otherImage)
+        }
         updateData.otherImage = req.files.otherImage[0].filename
       }
       if (req.files.bannerImage) {
+        if (currentMerchant.bannerImage) {
+          deleteOldImages("merchant/banners", currentMerchant.bannerImage)
+        }
         updateData.bannerImage = req.files.bannerImage[0].filename
       }
     }
@@ -286,13 +311,6 @@ exports.updateServiceProfile = async (req, res) => {
     const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, { new: true }).populate(
       "serviceId serviceSubcategoryIds serviceLocationIds serviceRestaurantCategoryIds couponIds",
     )
-
-    if (!merchant) {
-      return res.status(404).json({
-        status: false,
-        message: "Merchant not found",
-      })
-    }
 
     res.status(200).json({
       status: true,
@@ -552,6 +570,7 @@ exports.getCouponList = async (req, res) => {
   }
 }
 
+// Get Merchant Profile
 exports.getMerchantProfile = async (req, res) => {
   try {
     const merchantId = req.user.id
@@ -617,4 +636,3 @@ exports.getMerchantProfile = async (req, res) => {
     })
   }
 }
-
