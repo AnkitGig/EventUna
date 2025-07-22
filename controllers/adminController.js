@@ -7,7 +7,7 @@ const SubServices = require(`../models/merchant/Subservices`);
 const Preferences = require(`../models/event/EventPreferences`);
 const joi = require("joi");
 
-//    "email": "admin@yopmail.com",
+//   "email": "admin@yopmail.com",
 //   "mobile": "admin@420",
 
 exports.addServices = async (req, res) => {
@@ -242,13 +242,11 @@ exports.placePreferences = async (req, res) => {
     // Save note to database
     await newPreference.save();
 
-    res
-      .status(201)
-      .json({
-        statue: true,
-        message: "Preference added successfully",
-        preference: preference,
-      });
+    res.status(201).json({
+      statue: true,
+      message: "Preference added successfully",
+      preference: preference,
+    });
   } catch (error) {
     console.error("Error while adding place preferences :", error);
     res.status(500).json({ status: false, message: "Internal server error" });
@@ -264,7 +262,7 @@ exports.subServices = async (req, res) => {
       serviceId: joi.string().required(),
     });
 
-    const { error } = schema.validate( req.body );
+    const { error } = schema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
@@ -272,19 +270,17 @@ exports.subServices = async (req, res) => {
     // Create new note
     const subServices = new SubServices({
       subServicesName: subService,
-      serviceId
+      serviceId,
     });
 
     // Save note to database
     await subServices.save();
 
-    res
-      .status(201)
-      .json({
-        statue: true,
-        message: "subservices added successfully",
-        preference: subServices,
-      });
+    res.status(201).json({
+      statue: true,
+      message: "subservices added successfully",
+      preference: subServices,
+    });
   } catch (error) {
     console.error("Error while adding sub-services preferences :", error);
     res.status(500).json({ status: false, message: "Internal server error" });

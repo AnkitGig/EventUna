@@ -8,6 +8,9 @@ router.post("/verify-otp", merchant.verifyOtp)
 router.post("/login", merchant.login)
 router.get("/services", merchant.services)
 router.get("/sub-services", merchant.subServices)
+router.post("/coupon", protect, merchant.addCoupon)
+router.get("/coupon", protect, merchant.allCoupans)
+// router.get("/coupons", protect, merchant.allCoupans)
 
 
 
