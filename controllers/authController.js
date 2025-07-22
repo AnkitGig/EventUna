@@ -302,36 +302,34 @@ exports.updateProfile = async (req, res) => {
       dob: joi.string().optional(),
       gender: joi.string().optional(),
       fullName: joi.string().optional(),
+      profilePic: joi.string().optional(), // Add this line
     });
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate({ ...req.body, profilePic: req.file ? req.file.filename : undefined });
     if (error)
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
     const user = await User.findById(req.user.id);
-    let profilePic = user.profilePic;
     if (!user)
       return res.status(404).json({ status: false, message: "User not found" });
 
+    // Build update object dynamically
+    const updateObj = {
+      dob: dob || user.dob,
+      gender: gender ? gender.toLowerCase() : user.gender,
+      fullName: fullName || user.fullName,
+    };
+
     if (req.file) {
-      profilePic = req.file.filename;
+      updateObj.profilePic = req.file.filename;
       if (user.profilePic) {
         deleteOldImages("profile", user.profilePic);
       }
     }
 
-    await User.findByIdAndUpdate(
-      req.user.id,
-      {
-        dob: dob || user.dob,
-        gender: gender.toLowerCase() || user.gender,
-        profilePic: profilePic,
-        fullName: fullName || user.fullName,
-      },
-      { new: true }
-    );
-    // console.log("req.user", req.file.filename);
+    await User.findByIdAndUpdate(req.user.id, updateObj, { new: true });
+
     res.status(200).json({
       status: true,
       message: "Profile updated successfully",
