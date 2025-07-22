@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   mobile: { type: String, unique: true },
   password: String,
   otp: String,
+  countryCode: { type: String, default: '+91' },
   dob: {type: String, default: null },
   gender: {type: String, enum: ['male', 'female'], default: null},
   profilePic: { type: String, default: null },
