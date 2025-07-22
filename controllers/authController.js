@@ -294,7 +294,7 @@ exports.resendOtp = async (req, res) => {
   }
 };
 
-// Update Profile
+// Update Profiles
 exports.updateProfile = async (req, res) => {
   try {
     const { dob, gender, fullName } = req.body;
