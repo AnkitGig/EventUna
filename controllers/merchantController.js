@@ -17,7 +17,7 @@ const isMerchant = (req, res) => {
   }
   return false
 }
-// Signup
+// Signupsss
 exports.signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body)
@@ -156,7 +156,7 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ status: false, message: "Invalid credentials" })
 
-    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified" })
+    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified",  userId: user._id, serviceId: user.serviceId })
 
     // Update register_id and ios_register_id if provided
     if (register_id) user.register_id = register_id
@@ -268,7 +268,6 @@ exports.updateServiceProfile = async (req, res) => {
       vatNumber: joi.string().optional(),
       serviceSlogan: joi.string().optional(),
       serviceLocationIds: joi.string().optional(),
-      serviceRestaurantCategoryIds: joi.string().optional(),
       couponIds: joi.string().optional(),
     })
 
@@ -307,14 +306,6 @@ exports.updateServiceProfile = async (req, res) => {
         .filter((id) => id.length > 0)
       updateData.serviceLocationIds = ids
       console.log("Parsed serviceLocationIds:", ids)
-    }
-    if (req.body.serviceRestaurantCategoryIds) {
-      const ids = req.body.serviceRestaurantCategoryIds
-        .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0)
-      updateData.serviceRestaurantCategoryIds = ids
-      console.log("Parsed serviceRestaurantCategoryIds:", ids)
     }
     if (req.body.couponIds) {
       const ids = req.body.couponIds
@@ -359,7 +350,6 @@ exports.updateServiceProfile = async (req, res) => {
       .populate("serviceId", "servicesName")
       .populate("serviceSubcategoryIds", "subServicesName")
       .populate("serviceLocationIds")
-      .populate("serviceRestaurantCategoryIds", "categoryName description")
       .populate("couponIds")
 
     if (!merchant) {
@@ -703,106 +693,112 @@ exports.getCouponList = async (req, res) => {
 // Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {
-    const merchantId = req.user.id
+    const merchantId = req.user.id;
 
-    // First get the merchant without populate to see raw data
-    const merchant = await Merchant.findById(merchantId).select("-password -otp")
+    // Fetch merchant and exclude sensitive fields
+    const merchant = await Merchant.findById(merchantId).select("-password -otp");
 
     if (!merchant) {
       return res.status(404).json({
         status: false,
         message: "Merchant not found",
-      })
+      });
     }
 
-    // Convert to object for manipulation
-    const profileData = merchant.toObject()
+    const profileData = merchant.toObject();
 
-    // Manually populate each field with error handling
     try {
       // Populate serviceId
       if (profileData.serviceId) {
-        const service = await Services.findById(profileData.serviceId).select("servicesName")
-        profileData.serviceId = service || { _id: profileData.serviceId, servicesName: "Service not found" }
+        const service = await Services.findById(profileData.serviceId).select("servicesName");
+        profileData.serviceId = service || { _id: profileData.serviceId, servicesName: "Service not found" };
       }
 
       // Populate serviceSubcategoryIds
-      if (profileData.serviceSubcategoryIds && profileData.serviceSubcategoryIds.length > 0) {
+      if (Array.isArray(profileData.serviceSubcategoryIds) && profileData.serviceSubcategoryIds.length > 0) {
         const subservices = await Subservices.find({
           _id: { $in: profileData.serviceSubcategoryIds },
-        }).select("subServicesName")
-        profileData.serviceSubcategoryIds = subservices.length > 0 ? subservices : []
+        }).select("_id subServicesName");
+
+        // Map to ensure all IDs are present, even if not found
+        profileData.serviceSubcategoryIds = profileData.serviceSubcategoryIds.map(id => {
+          const found = subservices.find(s => s._id.toString() === id.toString());
+          return found
+            ? { _id: found._id, subServicesName: found.subServicesName }
+            : { _id: id, subServicesName: "Subservice not found" };
+        });
       }
 
       // Populate serviceLocationIds
-      if (profileData.serviceLocationIds && profileData.serviceLocationIds.length > 0) {
+      if (Array.isArray(profileData.serviceLocationIds) && profileData.serviceLocationIds.length > 0) {
         const locations = await ServiceLocation.find({
           _id: { $in: profileData.serviceLocationIds },
-        })
-        profileData.serviceLocationIds = locations.length > 0 ? locations : []
+        });
+
+        profileData.serviceLocationIds = locations.length > 0
+          ? locations
+          : profileData.serviceLocationIds.map(id => ({ _id: id, locationName: "Location not found", locationPhotoVideoList: [] }));
       }
 
-      // Populate serviceRestaurantCategoryIds
-      if (profileData.serviceRestaurantCategoryIds && profileData.serviceRestaurantCategoryIds.length > 0) {
-        const categories = await RestaurantCategory.find({
-          _id: { $in: profileData.serviceRestaurantCategoryIds },
-        }).select("categoryName description")
-        profileData.serviceRestaurantCategoryIds = categories.length > 0 ? categories : []
-      }
 
       // Populate couponIds
-      if (profileData.couponIds && profileData.couponIds.length > 0) {
+      if (Array.isArray(profileData.couponIds) && profileData.couponIds.length > 0) {
         const coupons = await Coupon.find({
           _id: { $in: profileData.couponIds },
-        })
-        profileData.couponIds = coupons.length > 0 ? coupons : []
+        });
+
+        profileData.couponIds = coupons.length > 0
+          ? coupons
+          : profileData.couponIds.map(id => ({ _id: id, title: "Coupon not found" }));
       }
     } catch (populateError) {
-      console.error("Error during manual populate:", populateError)
-      // Continue with unpopulated data rather than failing
+      console.error("Error during manual populate:", populateError);
     }
 
-    // Add full URLs for images
+    // Add full URLs for document images
+    const docBase = `${process.env.BASE_URL}/merchant/documents`;
+    const bannerBase = `${process.env.BASE_URL}/merchant/banners`;
+
     if (profileData.businessRegistrationImage) {
-      profileData.businessRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.businessRegistrationImage}`
+      profileData.businessRegistrationImage = `${docBase}/${profileData.businessRegistrationImage}`;
     }
 
     if (profileData.vatRegistrationImage) {
-      profileData.vatRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.vatRegistrationImage}`
+      profileData.vatRegistrationImage = `${docBase}/${profileData.vatRegistrationImage}`;
     }
 
     if (profileData.otherImage) {
-      profileData.otherImage = `${process.env.BASE_URL}/merchant/documents/${profileData.otherImage}`
+      profileData.otherImage = `${docBase}/${profileData.otherImage}`;
     }
 
     if (profileData.bannerImage) {
-      profileData.bannerImage = `${process.env.BASE_URL}/merchant/banners/${profileData.bannerImage}`
+      profileData.bannerImage = `${bannerBase}/${profileData.bannerImage}`;
     }
 
-    // Add full URLs for location media
-    if (profileData.serviceLocationIds && profileData.serviceLocationIds.length > 0) {
+    // Add media URLs to service locations
+    if (Array.isArray(profileData.serviceLocationIds)) {
       profileData.serviceLocationIds = profileData.serviceLocationIds.map((location) => {
-        if (location.locationPhotoVideoList && location.locationPhotoVideoList.length > 0) {
+        if (Array.isArray(location.locationPhotoVideoList)) {
           location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
             ...media,
             url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
-          }))
+          }));
         }
-        return location
-      })
+        return location;
+      });
     }
 
     res.status(200).json({
       status: true,
       message: "Merchant profile retrieved successfully",
       data: profileData,
-    })
+    });
   } catch (error) {
-    console.error("Error getting merchant profile:", error)
+    console.error("Error getting merchant profile:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",
       error: error.message,
-    })
+    });
   }
-}
+};
