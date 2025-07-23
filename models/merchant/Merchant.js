@@ -8,7 +8,7 @@ const merchantSchema = new mongoose.Schema(
     otp: String,
     isVerified: { type: Boolean, default: false },
     role: { type: String, default: "merchant" },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Services",
