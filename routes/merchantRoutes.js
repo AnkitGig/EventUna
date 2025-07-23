@@ -33,6 +33,7 @@ router.put(
   merchant.updateServiceLocation,
 )
 router.get("/location/:locationId", protect, merchant.getServiceLocation)
+router.get("/locations", protect, merchant.getAllServiceLocations)
 
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.get("/coupons", protect, merchant.getCouponList)

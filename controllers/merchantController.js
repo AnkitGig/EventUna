@@ -521,6 +521,46 @@ exports.getServiceLocation = async (req, res) => {
   }
 }
 
+// Get All Service Locations for a Merchant
+exports.getAllServiceLocations = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+
+    const locations = await ServiceLocation.find({
+      merchantId,
+    }).sort({ createdAt: -1 })
+
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No service locations found",
+      })
+    }
+
+    // Add full URLs for media files
+    const locationsWithUrls = locations.map((location) => {
+      const locationObj = location.toObject()
+      locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+        ...media,
+        url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
+      }))
+      return locationObj
+    })
+
+    res.status(200).json({
+      status: true,
+      message: "Service locations retrieved successfully",
+      data: locationsWithUrls,
+    })
+  } catch (error) {
+    console.error("Error getting service locations:", error)
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    })
+  }
+}
+
 // Add Coupon
 exports.addCoupon = async (req, res) => {
   try {
