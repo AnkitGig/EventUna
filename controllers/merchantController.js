@@ -156,7 +156,7 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ status: false, message: "Invalid credentials" })
 
-    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified",  userId: user._id, })
+    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified",  userId: user._id, serviceId: user.serviceId })
 
     // Update register_id and ios_register_id if provided
     if (register_id) user.register_id = register_id
