@@ -176,6 +176,7 @@ exports.login = async (req, res) => {
       isActive: user.isActive,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
+      serviceId: user.serviceId,
     })
   } catch (error) {
     console.error("Error during login:", error)
