@@ -268,7 +268,6 @@ exports.updateServiceProfile = async (req, res) => {
       vatNumber: joi.string().optional(),
       serviceSlogan: joi.string().optional(),
       serviceLocationIds: joi.string().optional(),
-      serviceRestaurantCategoryIds: joi.string().optional(),
       couponIds: joi.string().optional(),
     })
 
@@ -307,14 +306,6 @@ exports.updateServiceProfile = async (req, res) => {
         .filter((id) => id.length > 0)
       updateData.serviceLocationIds = ids
       console.log("Parsed serviceLocationIds:", ids)
-    }
-    if (req.body.serviceRestaurantCategoryIds) {
-      const ids = req.body.serviceRestaurantCategoryIds
-        .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0)
-      updateData.serviceRestaurantCategoryIds = ids
-      console.log("Parsed serviceRestaurantCategoryIds:", ids)
     }
     if (req.body.couponIds) {
       const ids = req.body.couponIds
@@ -359,7 +350,6 @@ exports.updateServiceProfile = async (req, res) => {
       .populate("serviceId", "servicesName")
       .populate("serviceSubcategoryIds", "subServicesName")
       .populate("serviceLocationIds")
-      .populate("serviceRestaurantCategoryIds", "categoryName description")
       .populate("couponIds")
 
     if (!merchant) {
@@ -728,11 +718,15 @@ exports.getMerchantProfile = async (req, res) => {
       if (Array.isArray(profileData.serviceSubcategoryIds) && profileData.serviceSubcategoryIds.length > 0) {
         const subservices = await Subservices.find({
           _id: { $in: profileData.serviceSubcategoryIds },
-        }).select("subServicesName");
+        }).select("_id subServicesName");
 
-        profileData.serviceSubcategoryIds = subservices.length > 0
-          ? subservices
-          : profileData.serviceSubcategoryIds.map(id => ({ _id: id, subServicesName: "Subservice not found" }));
+        // Map to ensure all IDs are present, even if not found
+        profileData.serviceSubcategoryIds = profileData.serviceSubcategoryIds.map(id => {
+          const found = subservices.find(s => s._id.toString() === id.toString());
+          return found
+            ? { _id: found._id, subServicesName: found.subServicesName }
+            : { _id: id, subServicesName: "Subservice not found" };
+        });
       }
 
       // Populate serviceLocationIds
@@ -746,20 +740,6 @@ exports.getMerchantProfile = async (req, res) => {
           : profileData.serviceLocationIds.map(id => ({ _id: id, locationName: "Location not found", locationPhotoVideoList: [] }));
       }
 
-      // Populate serviceRestaurantCategoryIds
-      if (Array.isArray(profileData.serviceRestaurantCategoryIds) && profileData.serviceRestaurantCategoryIds.length > 0) {
-        const categories = await RestaurantCategory.find({
-          _id: { $in: profileData.serviceRestaurantCategoryIds },
-        }).select("categoryName description");
-
-        profileData.serviceRestaurantCategoryIds = categories.length > 0
-          ? categories
-          : profileData.serviceRestaurantCategoryIds.map(id => ({
-              _id: id,
-              categoryName: "Category not found",
-              description: "",
-            }));
-      }
 
       // Populate couponIds
       if (Array.isArray(profileData.couponIds) && profileData.couponIds.length > 0) {

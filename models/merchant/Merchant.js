@@ -50,12 +50,6 @@ const merchantSchema = new mongoose.Schema(
         ref: "ServiceLocation",
       },
     ],
-    serviceRestaurantCategoryIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "RestaurantCategory",
-      },
-    ],
     couponIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
