@@ -332,6 +332,7 @@ exports.addServiceLocation = async (req, res) => {
     const merchantId = req.user.id
 
     const schema = joi.object({
+      addressName: joi.string().required(),
       address: joi.string().required(),
       lat: joi.number().required(),
       long: joi.number().required(),
@@ -345,10 +346,11 @@ exports.addServiceLocation = async (req, res) => {
       })
     }
 
-    const { address, lat, long } = req.body
+    const { addressName, address, lat, long } = req.body
 
     const newLocation = new ServiceLocation({
       merchantId,
+      addressName,
       address,
       lat,
       long,
