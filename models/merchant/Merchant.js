@@ -21,7 +21,7 @@ const merchantSchema = new mongoose.Schema(
     serviceSubcategoryIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Subervices",
+        ref: "Subservices",
       },
     ],
     serviceName: String,

@@ -3,6 +3,7 @@ const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
 const ServiceLocation = require("../models/merchant/ServiceLocation")
 const Coupon = require("../models/merchant/Coupon")
+const RestaurantCategory = require("../models/merchant/RestaurantCategory")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const { deleteOldImages } = require("../utils/helpers")
@@ -222,6 +223,25 @@ exports.subServices = async (req, res) => {
   }
 }
 
+// Get Restaurant Categories
+exports.getRestaurantCategories = async (req, res) => {
+  try {
+    const categories = await RestaurantCategory.find({})
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({ status: false, message: "No restaurant categories found" })
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Restaurant categories fetched successfully",
+      data: categories,
+    })
+  } catch (error) {
+    console.error("Error fetching restaurant categories:", error)
+    res.status(500).json({ status: false, message: "Internal server error" })
+  }
+}
+
 // Update Service Profile
 exports.updateServiceProfile = async (req, res) => {
   try {
@@ -229,6 +249,11 @@ exports.updateServiceProfile = async (req, res) => {
 
     console.log("Request body:", req.body)
     console.log("Request files:", req.files)
+
+    // Parse boolean values
+    if (req.body.onlineReservation !== undefined) {
+      req.body.onlineReservation = req.body.onlineReservation === "true" || req.body.onlineReservation === true
+    }
 
     const schema = joi.object({
       serviceSubcategoryIds: joi.string().optional(),
@@ -266,18 +291,38 @@ exports.updateServiceProfile = async (req, res) => {
 
     const updateData = { ...req.body }
 
-    // Parse comma-separated IDs
+    // Parse comma-separated IDs and filter out empty strings
     if (req.body.serviceSubcategoryIds) {
-      updateData.serviceSubcategoryIds = req.body.serviceSubcategoryIds.split(",")
+      const ids = req.body.serviceSubcategoryIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.serviceSubcategoryIds = ids
+      console.log("Parsed serviceSubcategoryIds:", ids)
     }
     if (req.body.serviceLocationIds) {
-      updateData.serviceLocationIds = req.body.serviceLocationIds.split(",")
+      const ids = req.body.serviceLocationIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.serviceLocationIds = ids
+      console.log("Parsed serviceLocationIds:", ids)
     }
     if (req.body.serviceRestaurantCategoryIds) {
-      updateData.serviceRestaurantCategoryIds = req.body.serviceRestaurantCategoryIds.split(",")
+      const ids = req.body.serviceRestaurantCategoryIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.serviceRestaurantCategoryIds = ids
+      console.log("Parsed serviceRestaurantCategoryIds:", ids)
     }
     if (req.body.couponIds) {
-      updateData.couponIds = req.body.couponIds.split(",")
+      const ids = req.body.couponIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.couponIds = ids
+      console.log("Parsed couponIds:", ids)
     }
 
     // Handle file uploads and delete old files
@@ -308,9 +353,23 @@ exports.updateServiceProfile = async (req, res) => {
       }
     }
 
-    const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, { new: true }).populate(
-      "serviceId serviceSubcategoryIds serviceLocationIds serviceRestaurantCategoryIds couponIds",
-    )
+    console.log("Final update data:", updateData)
+
+    const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, { new: true })
+      .populate("serviceId", "servicesName")
+      .populate("serviceSubcategoryIds", "subServicesName")
+      .populate("serviceLocationIds")
+      .populate("serviceRestaurantCategoryIds", "categoryName description")
+      .populate("couponIds")
+
+    if (!merchant) {
+      return res.status(404).json({
+        status: false,
+        message: "Failed to update merchant profile",
+      })
+    }
+
+    console.log("Updated merchant:", merchant)
 
     res.status(200).json({
       status: true,
@@ -322,6 +381,7 @@ exports.updateServiceProfile = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Internal server error",
+      error: error.message,
     })
   }
 }
@@ -640,69 +700,125 @@ exports.getCouponList = async (req, res) => {
   }
 }
 
-// Get Merchant Profile
+// Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {
-    const merchantId = req.user.id
+    const merchantId = req.user.id;
 
-    const merchant = await Merchant.findById(merchantId)
-      .select("-password -otp")
-      .populate("serviceId", "servicesName")
-      .populate("serviceSubcategoryIds", "subServicesName")
-      .populate("serviceLocationIds")
-      .populate("serviceRestaurantCategoryIds", "categoryName description")
-      .populate("couponIds")
-      .exec()
+    // Fetch merchant and exclude sensitive fields
+    const merchant = await Merchant.findById(merchantId).select("-password -otp");
 
     if (!merchant) {
       return res.status(404).json({
         status: false,
         message: "Merchant not found",
-      })
+      });
     }
 
-    // Add full URLs for images
-    const profileData = merchant.toObject()
+    const profileData = merchant.toObject();
+
+    try {
+      // Populate serviceId
+      if (profileData.serviceId) {
+        const service = await Services.findById(profileData.serviceId).select("servicesName");
+        profileData.serviceId = service || { _id: profileData.serviceId, servicesName: "Service not found" };
+      }
+
+      // Populate serviceSubcategoryIds
+      if (Array.isArray(profileData.serviceSubcategoryIds) && profileData.serviceSubcategoryIds.length > 0) {
+        const subservices = await Subservices.find({
+          _id: { $in: profileData.serviceSubcategoryIds },
+        }).select("subServicesName");
+
+        profileData.serviceSubcategoryIds = subservices.length > 0
+          ? subservices
+          : profileData.serviceSubcategoryIds.map(id => ({ _id: id, subServicesName: "Subservice not found" }));
+      }
+
+      // Populate serviceLocationIds
+      if (Array.isArray(profileData.serviceLocationIds) && profileData.serviceLocationIds.length > 0) {
+        const locations = await ServiceLocation.find({
+          _id: { $in: profileData.serviceLocationIds },
+        });
+
+        profileData.serviceLocationIds = locations.length > 0
+          ? locations
+          : profileData.serviceLocationIds.map(id => ({ _id: id, locationName: "Location not found", locationPhotoVideoList: [] }));
+      }
+
+      // Populate serviceRestaurantCategoryIds
+      if (Array.isArray(profileData.serviceRestaurantCategoryIds) && profileData.serviceRestaurantCategoryIds.length > 0) {
+        const categories = await RestaurantCategory.find({
+          _id: { $in: profileData.serviceRestaurantCategoryIds },
+        }).select("categoryName description");
+
+        profileData.serviceRestaurantCategoryIds = categories.length > 0
+          ? categories
+          : profileData.serviceRestaurantCategoryIds.map(id => ({
+              _id: id,
+              categoryName: "Category not found",
+              description: "",
+            }));
+      }
+
+      // Populate couponIds
+      if (Array.isArray(profileData.couponIds) && profileData.couponIds.length > 0) {
+        const coupons = await Coupon.find({
+          _id: { $in: profileData.couponIds },
+        });
+
+        profileData.couponIds = coupons.length > 0
+          ? coupons
+          : profileData.couponIds.map(id => ({ _id: id, title: "Coupon not found" }));
+      }
+    } catch (populateError) {
+      console.error("Error during manual populate:", populateError);
+    }
+
+    // Add full URLs for document images
+    const docBase = `${process.env.BASE_URL}/merchant/documents`;
+    const bannerBase = `${process.env.BASE_URL}/merchant/banners`;
 
     if (profileData.businessRegistrationImage) {
-      profileData.businessRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.businessRegistrationImage}`
+      profileData.businessRegistrationImage = `${docBase}/${profileData.businessRegistrationImage}`;
     }
 
     if (profileData.vatRegistrationImage) {
-      profileData.vatRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.vatRegistrationImage}`
+      profileData.vatRegistrationImage = `${docBase}/${profileData.vatRegistrationImage}`;
     }
 
     if (profileData.otherImage) {
-      profileData.otherImage = `${process.env.BASE_URL}/merchant/documents/${profileData.otherImage}`
+      profileData.otherImage = `${docBase}/${profileData.otherImage}`;
     }
 
     if (profileData.bannerImage) {
-      profileData.bannerImage = `${process.env.BASE_URL}/merchant/banners/${profileData.bannerImage}`
+      profileData.bannerImage = `${bannerBase}/${profileData.bannerImage}`;
     }
 
-    // Add full URLs for location media
-    if (profileData.serviceLocationIds && profileData.serviceLocationIds.length > 0) {
+    // Add media URLs to service locations
+    if (Array.isArray(profileData.serviceLocationIds)) {
       profileData.serviceLocationIds = profileData.serviceLocationIds.map((location) => {
-        if (location.locationPhotoVideoList && location.locationPhotoVideoList.length > 0) {
+        if (Array.isArray(location.locationPhotoVideoList)) {
           location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
             ...media,
             url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
-          }))
+          }));
         }
-        return location
-      })
+        return location;
+      });
     }
 
     res.status(200).json({
       status: true,
       message: "Merchant profile retrieved successfully",
       data: profileData,
-    })
+    });
   } catch (error) {
-    console.error("Error getting merchant profile:", error)
+    console.error("Error getting merchant profile:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",
-    })
+      error: error.message,
+    });
   }
-}
+};

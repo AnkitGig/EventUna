@@ -11,6 +11,7 @@ router.post("/resend-otp", merchant.resendOtp)
 router.post("/login", merchant.login)
 router.get("/services", merchant.services)
 router.get("/sub-services", merchant.subServices)
+router.get("/restaurant-categories", merchant.getRestaurantCategories)
 
 // New profile and location management routes
 router.put(

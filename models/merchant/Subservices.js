@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const subServicesSchema = new mongoose.Schema(
   {
@@ -13,7 +13,7 @@ const subServicesSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
-);
+  { timestamps: true },
+)
 
-module.exports = mongoose.model("Subervices", subServicesSchema);
+module.exports = mongoose.model("Subservices", subServicesSchema)
