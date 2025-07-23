@@ -41,7 +41,7 @@ exports.signup = async (req, res) => {
       $or: [{ email }, { mobile }],
     })
     if (existingUser) {
-      if (existingUser.isVerified == false) {
+      if (existingUser.isVerified == true) {
         const otp = generateOtp()
         existingUser.otp = otp
         await existingUser.save()
