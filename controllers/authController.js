@@ -1,504 +1,377 @@
-const User = require("../models/user/User");
-const Address = require("../models/user/Address");
-const { deleteOldImages } = require("../utils/helpers");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { generateOtp } = require("../utils/otp");
-const path = require("path");
-const joi = require("joi");
+const jwt = require("jsonwebtoken")
+const crypto = require("crypto")
+const User = require("../models/User")
+const Parent = require("../models/Parent")
+const emailService = require("../services/emailService")
 
-// Signup
-exports.signup = async (req, res) => {
+// Generate JWT token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key", {
+    expiresIn: "7d",
+  })
+}
+
+// Generate OTP
+const generateOTP = () => {
+  // Generate a 6-digit OTP
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+// @desc    First time login and password change
+// @route   POST /api/auth/first-login
+// @access  Public
+const firstTimeLogin = async (req, res) => {
   try {
-    console.log("Received signup request:", req.body);
-    const schema = joi.object({
-      fullName: joi
-        .string()
-        .pattern(/^[a-zA-Z\s]+$/)
-        .min(3)
-        .max(50)
-        .required()
-        .messages({
-          "string.pattern.base":
-            "Full name must only contain letters and spaces",
-          "string.min": "Full name must be at least 3 characters long",
-          "string.max": "Full name must be less than or equal to 50 characters",
-          "any.required": "Full name is required",
-        })
-        .optional(),
-      email: joi.string().email().required(),
-      mobile: joi.string().min(10).max(15).required(),
-      password: joi.string().min(6).required(),
-      countryCode: joi.string().optional(),
-      role: joi.string().optional(),
-      register_id: joi.string().optional(),
-      ios_register_id: joi.string().optional(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
+    const { email, temporaryPassword, newPassword } = req.body
 
-    const {
-      fullName,
-      email,
-      mobile,
-      password,
-      countryCode,
-      role,
-      register_id,
-      ios_register_id,
-    } = req.body;
-
-    const userCountryCode = countryCode || '+91';
-    const existingUser = await User.findOne({ $or: [{ email }, { mobile }] });
-    if (existingUser) {
-      if (existingUser.isVerified == false) {
-        const otp = generateOtp();
-        existingUser.otp = otp;
-        await existingUser.save();
-        console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
-        return res.status(200).json({
-          status: true,
-          message: "OTP resent to mobile",
-          userId: existingUser._id,
-        });
-      }
-      let message =
-        existingUser.email === email
-          ? `email already exists. Please use another one`
-          : `mobile number already exists. Please use another one`;
-      return res.status(400).json({ status: false, message: message });
+    // Validation
+    if (!email || !temporaryPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email, temporary password, and new password",
+      })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = generateOtp();
+    // Find user with temporary password
+    const user = await User.findOne({
+      email,
+      isFirstLogin: true,
+      isActive: true,
+    })
 
-    const user = new User({
-      fullName,
-      email: email.toLowerCase(),
-      mobile,
-      password: hashedPassword,
-      otp,
-      countryCode: userCountryCode,
-      role: role || "user",
-      register_id: register_id || null,
-      ios_register_id: ios_register_id || null,
-    });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials or account not found",
+      })
+    }
 
-    await user.save();
-    console.log(`Send OTP ${otp} to mobile: ${mobile}`);
-    res
-      .status(201)
-      .json({ status: true, message: "OTP sent to mobile", userId: user._id });
-  } catch (error) {
-    console.error("Error during signup:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
+    // Check temporary password
+    const isMatch = await user.comparePassword(temporaryPassword)
+    if (!isMatch || user.temporaryPassword !== temporaryPassword) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid temporary password",
+      })
+    }
 
-// Verify OTP
-exports.verifyOtp = async (req, res) => {
-  try {
-    const schema = joi.object({
-      userId: joi.string().required(),
-      otp: joi.string().required(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
+    // Validate new password
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      })
+    }
 
-    const { userId, otp } = req.body;
+    // Update password and clear first login flag
+    user.password = newPassword
+    user.isFirstLogin = false
+    user.temporaryPassword = null
+    user.lastLogin = new Date()
 
-    const user = await User.findById(userId);
-    if (!user)
-      return res.status(404).json({ status: false, message: "User not found" });
+    await user.save()
 
-    if (user.otp !== otp)
-      return res.status(400).json({ status: false, message: "Invalid OTP" });
-
-    user.isVerified = true;
-    user.otp = null;
-    await user.save();
-
-    res.json({ status: true, message: "User verified successfully" });
-  } catch (error) {
-    console.error("Error during OTP verification:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Login
-exports.login = async (req, res) => {
-  try {
-    const schema = joi.object({
-      email: joi.string().email().required(),
-      password: joi.string().required(),
-      register_id: joi.string().optional(),
-      ios_register_id: joi.string().optional(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-    const email = req.body.email.toLowerCase();
-    const { password, register_id, ios_register_id } = req.body;
-
-    // email.toLowerCase()
-    const user = await User.findOne({ email });
-    if (
-      !user ||
-      user.isDeleted ||
-      !(await bcrypt.compare(password, user.password))
-    )
-      return res
-        .status(400)
-        .json({ status: false, message: "Account does not exist" });
-
-    if (!user.isVerified)
-      return res
-        .status(403)
-        .json({ status: false, message: "Account not verified" });
-
-    // Update register_id and ios_register_id if provided
-    if (register_id) user.register_id = register_id;
-    if (ios_register_id) user.ios_register_id = ios_register_id;
-    if (register_id || ios_register_id) await user.save();
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
-    );
+    // Generate token
+    const token = generateToken(user._id)
 
     res.json({
-      status: true,
-      message: "Login successful",
-      token,
-      userId: user._id,
-      role: user.role,
-      register_id: user.register_id,
-      ios_register_id: user.ios_register_id,
-    });
-  } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Forgot Password
-exports.forgotPassword = async (req, res) => {
-  try {
-    const schema = joi.object({
-      email: joi.string().email().required(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-      const email = req.body.email.toLowerCase();
-
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ status: false, message: "User not found" });
-    const otp = generateOtp();
-    user.otp = otp;
-    await user.save();
-
-    console.log(`Send OTP ${otp} to email: ${email}`);
-    res.json({ status: true, message: "OTP sent to email", userId: user._id });
-  } catch (error) {
-    console.error("Error during forgot password:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Reset Password
-exports.resetPassword = async (req, res) => {
-  try {
-    const schema = joi.object({
-      userId: joi.string().required(),
-      otp: joi.string().required(),
-      newPassword: joi.string().min(6).required(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-    const { userId, otp, newPassword } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user || user.otp !== otp)
-      return res
-        .status(400)
-        .json({ status: false, message: "Invalid OTP or user" });
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.otp = null;
-    await user.save();
-
-    res.json({ status: true, message: "Password reset successfully" });
-  } catch (error) {
-    console.error("Error during password reset:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Resend OTP
-exports.resendOtp = async (req, res) => {
-  try {
-    const schema = joi
-      .object({
-        email: joi.string().email(),
-        mobile: joi.string().min(10).max(15),
-      })
-      .or("email", "mobile");
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-    const { email, mobile } = req.body;
-    const user = await User.findOne(email ? { email } : { mobile });
-    if (!user)
-      return res.status(404).json({ status: false, message: "User not found" });
-
-    // Remove the check for user.isVerified
-    // Always resend OTP, regardless of verification status
-    const otp = generateOtp();
-    user.otp = otp;
-    await user.save();
-
-    // Simulate sending OTP (log to console)
-    if (email) {
-      console.log(`Resend OTP ${otp} to email: ${email}`);
-    } else {
-      console.log(`Resend OTP ${otp} to mobile: ${mobile}`);
-    }
-
-    res.json({ status: true, message: "OTP resent", userId: user._id });
-  } catch (error) {
-    console.error("Error during resend OTP:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Update Profiles
-exports.updateProfile = async (req, res) => {
-  try {
-    const { dob, gender, fullName } = req.body;
-    const schema = joi.object({
-      dob: joi.string().optional(),
-      gender: joi.string().optional(),
-      fullName: joi.string().optional(),
-      profilePic: joi.string().optional(), // Add this line
-    });
-    const { error } = schema.validate({ ...req.body, profilePic: req.file ? req.file.filename : undefined });
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-    const user = await User.findById(req.user.id);
-    if (!user)
-      return res.status(404).json({ status: false, message: "User not found" });
-
-    // Build update object dynamically
-    const updateObj = {
-      dob: dob || user.dob,
-      gender: gender ? gender.toLowerCase() : user.gender,
-      fullName: fullName || user.fullName,
-    };
-
-    if (req.file) {
-      updateObj.profilePic = req.file.filename;
-      if (user.profilePic) {
-        deleteOldImages("profile", user.profilePic);
-      }
-    }
-
-    await User.findByIdAndUpdate(req.user.id, updateObj, { new: true });
-
-    res.status(200).json({
-      status: true,
-      message: "Profile updated successfully",
-      userId: user._id,
-    });
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Privacy Policy
-exports.privacyPolicy = async (req, res) => {
-  try {
-    res.sendFile(path.join(__dirname, "../view/privacyPolicy.html"));
-  } catch (error) {
-    console.error("Error fetching privacy policy:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// User Profile
-exports.getUserProfile = async (req, res) => {
-  try {
-    const userId = req.query.id;
-    if (userId) {
-      if (userId !== req.user.id) {
-        return res
-          .status(403)
-          .json({ status: false, message: "Access denied" });
-      }
-
-      const user = await User.findById(userId).select("-password -otp");
-      if (!user) {
-        return res
-          .status(404)
-          .json({ status: false, message: "User not found" });
-      }
-
-      user.profilePic = user.profilePic
-        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
-        : process.env.DEFAULT_PROFILE_PIC;
-
-      user.gender = user.gender ? user.gender.toUpperCase() : null;
-
-      return res.status(200).json({ status: true, user });
-    }
-
-    const allUsers = await User.find({ role: { $ne: "admin" } }).select(
-      "-password -otp"
-    );
-
-    allUsers.map((user) => {
-      user.gender =
-        user.gender == null ? user.gender : user.gender.toUpperCase();
-      user.profilePic = user.profilePic
-        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
-        : process.env.DEFAULT_PROFILE_PIC;
-    });
-    res.status(200).json({ status: true, users: allUsers });
-  } catch (error) {
-    console.error("Error getting user profile:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-// Soft Delete User
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    if (!user || user.isDeleted) {
-      return res.status(404).json({ status: false, message: "User not found" });
-    }
-    user.isDeleted = true;
-    await user.save();
-    res
-      .status(200)
-      .json({ status: true, message: "User deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-exports.addAddress = async (req, res) => {
-  try {
-    const { addressName, address1, address2, postcode } = req.body;
-    const schema = joi.object({
-      addressName: joi.string().required(),
-      address1: joi.string().required(),
-      address2: joi.string().optional(),
-      postcode: joi.string().required(),
-    });
-    const { error } = schema.validate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-    const newAddress = new Address({
-      addressName,
-      address1,
-      address2,
-      postcode,
-      userId: req.user.id,
-    });
-
-    await newAddress.save();
-    res
-      .status(201)
-      .json({ status: true, message: "Address added successfully" });
-  } catch (error) {
-    console.error("Error adding address:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-exports.getAddress = async (req, res) => {
-  try {
-    const addresses = await Address.find({ userId: req.user.id }).select(
-      "-userId -createdAt -updatedAt -__v"
-    );
-    if (!addresses || addresses.length === 0) {
-      return res
-        .status(404)
-        .json({ status: false, message: "No addresses found" });
-    }
-    res.status(200).json({ status: true, addresses });
-  } catch (error) {
-    console.error("Error fetching addresses:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-exports.allUsers = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const users = await User.find({
-      role: { $ne: "admin" },
-      _id: {
-        $ne: userId,
+      success: true,
+      message: "Password changed successfully. You are now logged in.",
+      data: {
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isFirstLogin: user.isFirstLogin,
+        },
       },
-    }).select("-password -otp -updatedAt -createdAt -__v");
-    if (!users || users.length === 0) {
-      return res.status(404).json({ status: false, message: "No users found" });
+    })
+  } catch (error) {
+    console.error("First time login error:", error)
+    res.status(500).json({
+      success: false,
+      message: "First time login failed",
+      error: error.message,
+    })
+  }
+}
+
+// @desc    Login User
+// @route   POST /api/auth/login
+// @access  Public
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password",
+      })
     }
 
-    // users.map((user) => {
-    //   if (user._id.toString() === userId) {
-    //     return res.status(403).json({
-    //       status: false,
-    //       message: "You cannot view your own profile in this list",
-    //     });
-    //   }
-    // });
+    // Find user
+    const user = await User.findOne({ email })
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      })
+    }
 
-    users.map((user) => {
-      user.profilePic = user.profilePic
-        ? `${process.env.BASE_URL}/profile/${user.profilePic}`
-        : `${process.env.DEFAULT_PROFILE_PIC}`;
-    });
+    // Check password
+    const isMatch = await user.comparePassword(password)
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      })
+    }
 
-    return res
-      .status(200)
-      .json({ status: true, users, message: "All users fetched successfully" });
+    // Check if it's first time login
+    if (user.isFirstLogin) {
+      return res.status(200).json({
+        success: true,
+        message: "First time login required. Please change your password.",
+        requirePasswordChange: true,
+        data: {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      })
+    }
+
+    // Update last login
+    user.lastLogin = new Date()
+    await user.save()
+
+    // Generate token
+    const token = generateToken(user._id)
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
+      },
+    })
   } catch (error) {
-    console.error("Error fetching all users:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
+    console.error("Login error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Login failed",
+      error: error.message,
+    })
   }
-};
+}
+
+// @desc    Request OTP for Password Reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email address",
+      })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found with this email",
+      })
+    }
+
+    // Generate OTP
+    const otp = generateOTP()
+
+    // Set OTP expiration (10 minutes)
+    const otpExpiry = Date.now() + 10 * 60 * 1000
+
+    // Save OTP to user record
+    user.resetPasswordToken = otp
+    user.resetPasswordExpires = otpExpiry
+    await user.save()
+
+    // Send OTP email
+    await emailService.sendOTPEmail({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      otp: otp,
+    })
+
+    res.json({
+      success: true,
+      message: "OTP sent to your email",
+      data: {
+        email: user.email,
+      },
+    })
+  } catch (error) {
+    console.error("Forgot password error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Failed to process forgot password request",
+      error: error.message,
+    })
+  }
+}
+
+// @desc    Verify OTP for Password Reset
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and OTP",
+      })
+    }
+
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: otp,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      })
+    }
+
+    // Generate a temporary verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex")
+    user.resetPasswordToken = verificationToken
+    await user.save()
+
+    res.json({
+      success: true,
+      message: "OTP verified successfully",
+      data: {
+        email: user.email,
+        verificationToken,
+      },
+    })
+  } catch (error) {
+    console.error("OTP verification error:", error)
+    res.status(500).json({
+      success: false,
+      message: "OTP verification failed",
+      error: error.message,
+    })
+  }
+}
+
+// @desc    Reset Password after OTP verification
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    const { email, verificationToken, newPassword } = req.body
+
+    if (!email || !verificationToken || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email, verification token, and new password",
+      })
+    }
+
+    // Validate password
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      })
+    }
+
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: verificationToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification token",
+      })
+    }
+
+    // Update password
+    user.password = newPassword
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+
+    await user.save()
+
+    res.json({
+      success: true,
+      message: "Password reset successful",
+    })
+  } catch (error) {
+    console.error("Reset password error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Password reset failed",
+      error: error.message,
+    })
+  }
+}
+
+// @desc    Get current user profile
+// @route   GET /api/auth/profile
+// @access  Private
+const getUserProfile = async (req, res) => {
+  try {
+    const profile = { user: req.user }
+
+    if (req.user.role === "parent") {
+      const parent = await Parent.findOne({ userId: req.user._id }).populate("children.schoolId")
+      profile.parent = parent
+    }
+
+    res.json({
+      success: true,
+      data: profile,
+    })
+  } catch (error) {
+    console.error("Get profile error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile",
+      error: error.message,
+    })
+  }
+}
+
+module.exports = {
+  firstTimeLogin,
+  loginUser,
+  forgotPassword,
+  verifyOTP,
+  resetPassword,
+  getUserProfile,
+}
