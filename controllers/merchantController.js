@@ -429,7 +429,7 @@ exports.addServiceLocation = async (req, res) => {
 // Update Service Location
 exports.updateServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.params
+    const { locationId } = req.query
     const merchantId = req.user.id
 
     console.log("Request body:", req.body)
