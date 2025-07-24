@@ -30,7 +30,6 @@ router.post("/add-location", protect, merchant.addServiceLocation)
 router.post(
   "/update-location",
   protect,
-  uploadLocationMedia.array("locationPhotoVideoList", 10),
   merchant.updateServiceLocation,
 )
 router.get("/location", protect, merchant.getServiceLocation)

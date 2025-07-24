@@ -8,7 +8,7 @@ const Preferences = require(`../models/event/EventPreferences`)
 const RestaurantCategory = require(`../models/merchant/RestaurantCategory`)
 const joi = require("joi")
 
-//    "email": "admin@yopmail.com",
+//   "email": "admin@yopmail.com",
 //   "mobile": "admin@420",
 
 exports.addServices = async (req, res) => {

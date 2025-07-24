@@ -182,7 +182,7 @@ exports.login = async (req, res) => {
     console.error("Error during login:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
   }
-}
+};
 
 exports.services = async (req, res) => {
   try {
@@ -961,3 +961,92 @@ exports.getMerchantProfile = async (req, res) => {
     });
   }
 };
+<<<<<<< HEAD
+
+exports.addCoupon = async (req, res) => {
+  try {
+    const { couponName, discount, validFrom, validTo, description } = req.body;
+
+    const schema = joi.object({
+      couponName: joi.string().required(),
+      discount: joi.number().required(),
+      validFrom: joi.string().required(),
+      validTo: joi.string().required(),
+      description: joi.string().required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const coupon = new Coupan({
+      couponName,
+      discount,
+      validFrom: new Date(validFrom),
+      validTo: new Date(validTo),
+      description,
+      userId: req.user.id,
+    });
+
+    await coupon.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon added successfully",
+      // data: coupon,
+    });
+  } catch (error) {
+    console.error("Error while adding coupon:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+exports.allCoupans = async (req, res) => {
+  try {
+    const { id } = req.query; // ✅ Corrected destructuring
+
+    if (id) {
+      const coupan = await Coupan.findById(id);
+      if (!coupan)
+        return res
+          .status(404)
+          .json({ status: false, message: "Coupon does not exist" });
+
+      return res.status(200).json({
+        status: true,
+        message: "Coupon fetched successfully",
+        data: coupan,
+      });
+    }
+
+    const coupans = await Coupan.find();
+
+    for (const item of coupans) {
+      if (new Date(item.validTo) < new Date()) {
+        if (item.isActive) {
+          item.isActive = false;
+          // item.isActive = item.isActive? false: true;
+          await item.save(); 
+        }
+      }
+    }
+
+    if (!coupans || coupans.length === 0)
+      return res
+        .status(404)
+        .json({ status: false, message: "No coupons found" });
+
+    return res.status(200).json({
+      status: true,
+      message: "Coupons fetched successfully",
+      data: coupans,
+    });
+  } catch (error) {
+    console.error("Error while fetching coupon(s):", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+=======
+>>>>>>> 4259b0bcd9898e9ccfdda9d01917f645f87b2242
