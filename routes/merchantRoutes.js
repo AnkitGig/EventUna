@@ -27,7 +27,7 @@ router.put(
 )
 
 router.post("/add-location", protect, merchant.addServiceLocation)
-router.put(
+router.post(
   "/update-location",
   protect,
   merchant.updateServiceLocation,

@@ -452,7 +452,7 @@ exports.addServiceLocation = async (req, res) => {
 // Update Service Location
 exports.updateServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.query
+    // const { locationId } = req.query
     const merchantId = req.user.id
 
     console.log("Request body:", req.body)
@@ -479,6 +479,7 @@ exports.updateServiceLocation = async (req, res) => {
     }
 
     const schema = joi.object({
+      locationId: joi.string().required(),
       capacity: joi.number().optional(),
       floorPlan: joi.string().optional(),
       locationPhone: joi.string().optional(),
@@ -534,7 +535,7 @@ exports.updateServiceLocation = async (req, res) => {
       updateData.locationPhotoVideoList = mediaList
     }
 
-    const location = await ServiceLocation.findOneAndUpdate({ _id: locationId, merchantId }, updateData, { new: true })
+    const location = await ServiceLocation.findOneAndUpdate({ _id: req.body.locationId, merchantId }, updateData, { new: true })
 
     if (!location) {
       return res.status(404).json({
@@ -961,7 +962,6 @@ exports.getMerchantProfile = async (req, res) => {
     });
   }
 };
-<<<<<<< HEAD
 
 exports.addCoupon = async (req, res) => {
   try {
@@ -1048,5 +1048,3 @@ exports.allCoupans = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-=======
->>>>>>> 4259b0bcd9898e9ccfdda9d01917f645f87b2242
