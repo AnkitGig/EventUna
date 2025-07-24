@@ -8,7 +8,7 @@ const merchantSchema = new mongoose.Schema(
     otp: String,
     isVerified: { type: Boolean, default: false },
     role: { type: String, default: "merchant" },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Services",
@@ -21,7 +21,7 @@ const merchantSchema = new mongoose.Schema(
     serviceSubcategoryIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Subervices",
+        ref: "Subservices",
       },
     ],
     serviceName: String,
@@ -48,12 +48,6 @@ const merchantSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ServiceLocation",
-      },
-    ],
-    serviceRestaurantCategoryIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "RestaurantCategory",
       },
     ],
     couponIds: [

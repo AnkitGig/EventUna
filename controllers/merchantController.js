@@ -3,6 +3,7 @@ const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
 const ServiceLocation = require("../models/merchant/ServiceLocation")
 const Coupon = require("../models/merchant/Coupon")
+const RestaurantCategory = require("../models/merchant/RestaurantCategory")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const { deleteOldImages } = require("../utils/helpers")
@@ -16,7 +17,7 @@ const isMerchant = (req, res) => {
   }
   return false
 }
-// Signup
+// Signupsss
 exports.signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body)
@@ -40,7 +41,7 @@ exports.signup = async (req, res) => {
       $or: [{ email }, { mobile }],
     })
     if (existingUser) {
-      if (existingUser.isVerified == false) {
+      if (existingUser.isVerified == true) {
         const otp = generateOtp()
         existingUser.otp = otp
         await existingUser.save()
@@ -155,7 +156,7 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ status: false, message: "Invalid credentials" })
 
-    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified" })
+    if (!user.isVerified) return res.status(403).json({ status: false, message: "Account not verified",  userId: user._id, serviceId: user.serviceId })
 
     // Update register_id and ios_register_id if provided
     if (register_id) user.register_id = register_id
@@ -175,6 +176,7 @@ exports.login = async (req, res) => {
       isActive: user.isActive,
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
+      serviceId: user.serviceId,
     })
   } catch (error) {
     console.error("Error during login:", error)
@@ -192,7 +194,18 @@ exports.services = async (req, res) => {
       return res.status(404).json({ status: false, message: "No services found" })
     }
 
-    res.status(200).json({ status: true, message: "Services fetched successfully", services })
+    // For each service, fetch its subcategories (subservices)
+    const servicesWithSubcategories = await Promise.all(
+      services.map(async (service) => {
+        const subcategories = await Subservices.find({ serviceId: service._id }).select("_id subServicesName serviceId")
+        return {
+          ...service.toObject(),
+          subcategories,
+        }
+      })
+    )
+
+    res.status(200).json({ status: true, message: "Services fetched successfully", services: servicesWithSubcategories })
   } catch (error) {
     console.error("Error fetching services:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
@@ -222,6 +235,25 @@ exports.subServices = async (req, res) => {
   }
 }
 
+// Get Restaurant Categories
+exports.getRestaurantCategories = async (req, res) => {
+  try {
+    const categories = await RestaurantCategory.find({})
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({ status: false, message: "No restaurant categories found" })
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Restaurant categories fetched successfully",
+      data: categories,
+    })
+  } catch (error) {
+    console.error("Error fetching restaurant categories:", error)
+    res.status(500).json({ status: false, message: "Internal server error" })
+  }
+}
+
 // Update Service Profile
 exports.updateServiceProfile = async (req, res) => {
   try {
@@ -229,6 +261,11 @@ exports.updateServiceProfile = async (req, res) => {
 
     console.log("Request body:", req.body)
     console.log("Request files:", req.files)
+
+    // Parse boolean values
+    if (req.body.onlineReservation !== undefined) {
+      req.body.onlineReservation = req.body.onlineReservation === "true" || req.body.onlineReservation === true
+    }
 
     const schema = joi.object({
       serviceSubcategoryIds: joi.string().optional(),
@@ -243,7 +280,6 @@ exports.updateServiceProfile = async (req, res) => {
       vatNumber: joi.string().optional(),
       serviceSlogan: joi.string().optional(),
       serviceLocationIds: joi.string().optional(),
-      serviceRestaurantCategoryIds: joi.string().optional(),
       couponIds: joi.string().optional(),
     })
 
@@ -264,20 +300,44 @@ exports.updateServiceProfile = async (req, res) => {
       })
     }
 
+
     const updateData = { ...req.body }
 
-    // Parse comma-separated IDs
+    // Remove keys with blank values (empty string, null, undefined)
+    Object.keys(updateData).forEach((key) => {
+      if (
+        updateData[key] === "" ||
+        updateData[key] === null ||
+        updateData[key] === undefined
+      ) {
+        delete updateData[key]
+      }
+    })
+
+    // Parse comma-separated IDs and filter out empty strings
     if (req.body.serviceSubcategoryIds) {
-      updateData.serviceSubcategoryIds = req.body.serviceSubcategoryIds.split(",")
+      const ids = req.body.serviceSubcategoryIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.serviceSubcategoryIds = ids
+      console.log("Parsed serviceSubcategoryIds:", ids)
     }
     if (req.body.serviceLocationIds) {
-      updateData.serviceLocationIds = req.body.serviceLocationIds.split(",")
-    }
-    if (req.body.serviceRestaurantCategoryIds) {
-      updateData.serviceRestaurantCategoryIds = req.body.serviceRestaurantCategoryIds.split(",")
+      const ids = req.body.serviceLocationIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.serviceLocationIds = ids
+      console.log("Parsed serviceLocationIds:", ids)
     }
     if (req.body.couponIds) {
-      updateData.couponIds = req.body.couponIds.split(",")
+      const ids = req.body.couponIds
+        .split(",")
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+      updateData.couponIds = ids
+      console.log("Parsed couponIds:", ids)
     }
 
     // Handle file uploads and delete old files
@@ -308,9 +368,22 @@ exports.updateServiceProfile = async (req, res) => {
       }
     }
 
-    const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, { new: true }).populate(
-      "serviceId serviceSubcategoryIds serviceLocationIds serviceRestaurantCategoryIds couponIds",
-    )
+    console.log("Final update data:", updateData)
+
+    const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, { new: true })
+      .populate("serviceId", "servicesName")
+      .populate("serviceSubcategoryIds", "subServicesName")
+      .populate("serviceLocationIds")
+      .populate("couponIds")
+
+    if (!merchant) {
+      return res.status(404).json({
+        status: false,
+        message: "Failed to update merchant profile",
+      })
+    }
+
+    console.log("Updated merchant:", merchant)
 
     res.status(200).json({
       status: true,
@@ -322,6 +395,7 @@ exports.updateServiceProfile = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Internal server error",
+      error: error.message,
     })
   }
 }
@@ -332,6 +406,7 @@ exports.addServiceLocation = async (req, res) => {
     const merchantId = req.user.id
 
     const schema = joi.object({
+      addressName: joi.string().required(),
       address: joi.string().required(),
       lat: joi.number().required(),
       long: joi.number().required(),
@@ -345,10 +420,11 @@ exports.addServiceLocation = async (req, res) => {
       })
     }
 
-    const { address, lat, long } = req.body
+    const { addressName, address, lat, long } = req.body
 
     const newLocation = new ServiceLocation({
       merchantId,
+      addressName,
       address,
       lat,
       long,
@@ -376,7 +452,7 @@ exports.addServiceLocation = async (req, res) => {
 // Update Service Location
 exports.updateServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.params
+    const { locationId } = req.query
     const merchantId = req.user.id
 
     console.log("Request body:", req.body)
@@ -484,34 +560,81 @@ exports.updateServiceLocation = async (req, res) => {
 // Get Service Location
 exports.getServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.params
-    const merchantId = req.user.id
+    const { locationId } = req.query;
+    const merchantId = req.user.id;
+
+    if (!locationId) {
+      return res.status(400).json({
+        status: false,
+        message: "locationId query parameter is required",
+      });
+    }
 
     const location = await ServiceLocation.findOne({
       _id: locationId,
       merchantId,
-    })
+    });
 
     if (!location) {
       return res.status(404).json({
         status: false,
         message: "Service location not found",
-      })
+      });
     }
 
     // Add full URLs for media files
     location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
       ...media.toObject(),
       url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
-    }))
+    }));
 
     res.status(200).json({
       status: true,
       message: "Service location retrieved successfully",
       data: location,
+    });
+  } catch (error) {
+    console.error("Error getting service location:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+}
+
+// Get All Service Locations for a Merchant
+exports.getAllServiceLocations = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+
+    const locations = await ServiceLocation.find({
+      merchantId,
+    }).sort({ createdAt: -1 })
+
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No service locations found",
+      })
+    }
+
+    // Add full URLs for media files
+    const locationsWithUrls = locations.map((location) => {
+      const locationObj = location.toObject()
+      locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+        ...media,
+        url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
+      }))
+      return locationObj
+    })
+
+    res.status(200).json({
+      status: true,
+      message: "Service locations retrieved successfully",
+      data: locationsWithUrls,
     })
   } catch (error) {
-    console.error("Error getting service location:", error)
+    console.error("Error getting service locations:", error)
     res.status(500).json({
       status: false,
       message: "Internal server error",
@@ -598,72 +721,247 @@ exports.getCouponList = async (req, res) => {
   }
 }
 
-// Get Merchant Profile
+// Get Coupon by ID (using query param)
+exports.getCouponById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const coupon = await Coupon.findOne({ _id: couponId, merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon retrieved successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error getting coupon by id:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Update Coupon (using query param)
+exports.updateCoupon = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const schema = joi.object({
+      couponName: joi.string().optional(),
+      discount: joi.number().min(0).max(100).optional(),
+      validFrom: joi.date().optional(),
+      validTo: joi.date().greater(joi.ref("validFrom")).optional(),
+      description: joi.string().optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const coupon = await Coupon.findOneAndUpdate(
+      { _id: couponId, merchantId },
+      req.body,
+      { new: true }
+    );
+
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon updated successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error updating coupon:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Delete Coupon (using query param)
+exports.deleteCoupon = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const coupon = await Coupon.findOneAndDelete({ _id: couponId, merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    // Remove couponId from merchant's couponIds array
+    await Merchant.findByIdAndUpdate(merchantId, { $pull: { couponIds: couponId } });
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting coupon:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {
-    const merchantId = req.user.id
+    const merchantId = req.user.id;
 
-    const merchant = await Merchant.findById(merchantId)
-      .select("-password -otp")
-      .populate("serviceId", "servicesName")
-      .populate("serviceSubcategoryIds", "subServicesName")
-      .populate("serviceLocationIds")
-      .populate("serviceRestaurantCategoryIds", "categoryName description")
-      .populate("couponIds")
-      .exec()
+    // Fetch merchant and exclude sensitive fields
+    const merchant = await Merchant.findById(merchantId).select("-password -otp");
 
     if (!merchant) {
       return res.status(404).json({
         status: false,
         message: "Merchant not found",
-      })
+      });
     }
 
-    // Add full URLs for images
-    const profileData = merchant.toObject()
+    const profileData = merchant.toObject();
+
+    try {
+      // Populate serviceId
+      if (profileData.serviceId) {
+        const service = await Services.findById(profileData.serviceId).select("servicesName");
+        profileData.serviceId = service || { _id: profileData.serviceId, servicesName: "Service not found" };
+      }
+
+      // Populate serviceSubcategoryIds
+      if (Array.isArray(profileData.serviceSubcategoryIds) && profileData.serviceSubcategoryIds.length > 0) {
+        const subservices = await Subservices.find({
+          _id: { $in: profileData.serviceSubcategoryIds },
+        }).select("_id subServicesName");
+
+        // Map to ensure all IDs are present, even if not found
+        profileData.serviceSubcategoryIds = profileData.serviceSubcategoryIds.map(id => {
+          const found = subservices.find(s => s._id.toString() === id.toString());
+          return found
+            ? { _id: found._id, subServicesName: found.subServicesName }
+            : { _id: id, subServicesName: "Subservice not found" };
+        });
+      }
+
+      // Populate serviceLocationIds
+      if (Array.isArray(profileData.serviceLocationIds) && profileData.serviceLocationIds.length > 0) {
+        const locations = await ServiceLocation.find({
+          _id: { $in: profileData.serviceLocationIds },
+        });
+
+        profileData.serviceLocationIds = locations.length > 0
+          ? locations
+          : profileData.serviceLocationIds.map(id => ({ _id: id, locationName: "Location not found", locationPhotoVideoList: [] }));
+      }
+
+
+      // Populate couponIds
+      if (Array.isArray(profileData.couponIds) && profileData.couponIds.length > 0) {
+        const coupons = await Coupon.find({
+          _id: { $in: profileData.couponIds },
+        });
+
+        profileData.couponIds = coupons.length > 0
+          ? coupons
+          : profileData.couponIds.map(id => ({ _id: id, title: "Coupon not found" }));
+      }
+    } catch (populateError) {
+      console.error("Error during manual populate:", populateError);
+    }
+
+    // Add full URLs for document images
+    const docBase = `${process.env.BASE_URL}/merchant/documents`;
+    const bannerBase = `${process.env.BASE_URL}/merchant/banners`;
 
     if (profileData.businessRegistrationImage) {
-      profileData.businessRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.businessRegistrationImage}`
+      profileData.businessRegistrationImage = `${docBase}/${profileData.businessRegistrationImage}`;
     }
 
     if (profileData.vatRegistrationImage) {
-      profileData.vatRegistrationImage = `${process.env.BASE_URL}/merchant/documents/${profileData.vatRegistrationImage}`
+      profileData.vatRegistrationImage = `${docBase}/${profileData.vatRegistrationImage}`;
     }
 
     if (profileData.otherImage) {
-      profileData.otherImage = `${process.env.BASE_URL}/merchant/documents/${profileData.otherImage}`
+      profileData.otherImage = `${docBase}/${profileData.otherImage}`;
     }
 
     if (profileData.bannerImage) {
-      profileData.bannerImage = `${process.env.BASE_URL}/merchant/banners/${profileData.bannerImage}`
+      profileData.bannerImage = `${bannerBase}/${profileData.bannerImage}`;
     }
 
-    // Add full URLs for location media
-    if (profileData.serviceLocationIds && profileData.serviceLocationIds.length > 0) {
+    // Add media URLs to service locations
+    if (Array.isArray(profileData.serviceLocationIds)) {
       profileData.serviceLocationIds = profileData.serviceLocationIds.map((location) => {
-        if (location.locationPhotoVideoList && location.locationPhotoVideoList.length > 0) {
+        if (Array.isArray(location.locationPhotoVideoList)) {
           location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
             ...media,
             url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
-          }))
+          }));
         }
-        return location
-      })
+        return location;
+      });
     }
 
     res.status(200).json({
       status: true,
       message: "Merchant profile retrieved successfully",
       data: profileData,
-    })
+    });
   } catch (error) {
-    console.error("Error getting merchant profile:", error)
+    console.error("Error getting merchant profile:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",
-    })
+      error: error.message,
+    });
   }
 };
+<<<<<<< HEAD
 
 exports.addCoupon = async (req, res) => {
   try {
@@ -750,3 +1048,5 @@ exports.allCoupans = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+=======
+>>>>>>> 4259b0bcd9898e9ccfdda9d01917f645f87b2242

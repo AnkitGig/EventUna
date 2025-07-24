@@ -11,6 +11,7 @@ router.post("/resend-otp", merchant.resendOtp)
 router.post("/login", merchant.login)
 router.get("/services", merchant.services)
 router.get("/sub-services", merchant.subServices)
+router.get("/restaurant-categories", merchant.getRestaurantCategories)
 
 // New profile and location management routes
 router.put(
@@ -31,10 +32,17 @@ router.put(
   protect,
   merchant.updateServiceLocation,
 )
-router.get("/location/:locationId", protect, merchant.getServiceLocation)
+router.get("/location", protect, merchant.getServiceLocation)
+router.get("/locations", protect, merchant.getAllServiceLocations)
 
+
+// Coupon CRUD routes
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.get("/coupons", protect, merchant.getCouponList)
+router.get("/coupon", protect, merchant.getCouponById) // expects ?couponId=...
+router.put("/coupon", protect, merchant.updateCoupon)   // expects ?couponId=... in query
+router.delete("/coupon", protect, merchant.deleteCoupon) // expects ?couponId=... in query
+
 router.get("/profile", protect, merchant.getMerchantProfile)
 
 module.exports = router

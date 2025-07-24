@@ -7,6 +7,10 @@ const serviceLocationSchema = new mongoose.Schema(
       ref: "Merchant",
       required: true,
     },
+    addressName: {
+      type: String,
+      required: true,
+    },
     address: {
       type: String,
       required: true,
