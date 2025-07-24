@@ -194,7 +194,18 @@ exports.services = async (req, res) => {
       return res.status(404).json({ status: false, message: "No services found" })
     }
 
-    res.status(200).json({ status: true, message: "Services fetched successfully", services })
+    // For each service, fetch its subcategories (subservices)
+    const servicesWithSubcategories = await Promise.all(
+      services.map(async (service) => {
+        const subcategories = await Subservices.find({ serviceId: service._id }).select("_id subServicesName serviceId")
+        return {
+          ...service.toObject(),
+          subcategories,
+        }
+      })
+    )
+
+    res.status(200).json({ status: true, message: "Services fetched successfully", services: servicesWithSubcategories })
   } catch (error) {
     console.error("Error fetching services:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
