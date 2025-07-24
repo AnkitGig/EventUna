@@ -33,7 +33,7 @@ router.put(
   uploadLocationMedia.array("locationPhotoVideoList", 10),
   merchant.updateServiceLocation,
 )
-router.get("/location/:locationId", protect, merchant.getServiceLocation)
+router.get("/location", protect, merchant.getServiceLocation)
 router.get("/locations", protect, merchant.getAllServiceLocations)
 
 router.post("/add-coupon", protect, merchant.addCoupon)

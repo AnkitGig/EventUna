@@ -537,38 +537,45 @@ exports.updateServiceLocation = async (req, res) => {
 // Get Service Location
 exports.getServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.params
-    const merchantId = req.user.id
+    const { locationId } = req.query;
+    const merchantId = req.user.id;
+
+    if (!locationId) {
+      return res.status(400).json({
+        status: false,
+        message: "locationId query parameter is required",
+      });
+    }
 
     const location = await ServiceLocation.findOne({
       _id: locationId,
       merchantId,
-    })
+    });
 
     if (!location) {
       return res.status(404).json({
         status: false,
         message: "Service location not found",
-      })
+      });
     }
 
     // Add full URLs for media files
     location.locationPhotoVideoList = location.locationPhotoVideoList.map((media) => ({
       ...media.toObject(),
       url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
-    }))
+    }));
 
     res.status(200).json({
       status: true,
       message: "Service location retrieved successfully",
       data: location,
-    })
+    });
   } catch (error) {
-    console.error("Error getting service location:", error)
+    console.error("Error getting service location:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",
-    })
+    });
   }
 }
 
