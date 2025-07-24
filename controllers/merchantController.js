@@ -721,6 +721,134 @@ exports.getCouponList = async (req, res) => {
   }
 }
 
+// Get Coupon by ID (using query param)
+exports.getCouponById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const coupon = await Coupon.findOne({ _id: couponId, merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon retrieved successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error getting coupon by id:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Update Coupon (using query param)
+exports.updateCoupon = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const schema = joi.object({
+      couponName: joi.string().optional(),
+      discount: joi.number().min(0).max(100).optional(),
+      validFrom: joi.date().optional(),
+      validTo: joi.date().greater(joi.ref("validFrom")).optional(),
+      description: joi.string().optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const coupon = await Coupon.findOneAndUpdate(
+      { _id: couponId, merchantId },
+      req.body,
+      { new: true }
+    );
+
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon updated successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error updating coupon:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Delete Coupon (using query param)
+exports.deleteCoupon = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId } = req.query;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+
+    const coupon = await Coupon.findOneAndDelete({ _id: couponId, merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    // Remove couponId from merchant's couponIds array
+    await Merchant.findByIdAndUpdate(merchantId, { $pull: { couponIds: couponId } });
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting coupon:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {

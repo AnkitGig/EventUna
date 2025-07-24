@@ -36,8 +36,14 @@ router.put(
 router.get("/location", protect, merchant.getServiceLocation)
 router.get("/locations", protect, merchant.getAllServiceLocations)
 
+
+// Coupon CRUD routes
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.get("/coupons", protect, merchant.getCouponList)
+router.get("/coupon", protect, merchant.getCouponById) // expects ?couponId=...
+router.put("/coupon", protect, merchant.updateCoupon)   // expects ?couponId=... in query
+router.delete("/coupon", protect, merchant.deleteCoupon) // expects ?couponId=... in query
+
 router.get("/profile", protect, merchant.getMerchantProfile)
 
 module.exports = router
