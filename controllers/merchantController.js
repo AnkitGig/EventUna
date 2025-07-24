@@ -452,12 +452,12 @@ exports.addServiceLocation = async (req, res) => {
 // Update Service Location
 exports.updateServiceLocation = async (req, res) => {
   try {
-    const { locationId } = req.query
+    // const { locationId } = req.query
     const merchantId = req.user.id
-
+ 
     console.log("Request body:", req.body)
     console.log("Request files:", req.files)
-
+ 
     // Parse weeklySchedule if it's a string
     let parsedWeeklySchedule = null
     if (req.body.weeklySchedule) {
@@ -471,14 +471,15 @@ exports.updateServiceLocation = async (req, res) => {
         })
       }
     }
-
+ 
     // Create validation object with parsed schedule
     const validationData = {
       ...req.body,
       weeklySchedule: parsedWeeklySchedule,
     }
-
+ 
     const schema = joi.object({
+      locationId: joi.string().required(),
       capacity: joi.number().optional(),
       floorPlan: joi.string().optional(),
       locationPhone: joi.string().optional(),
@@ -508,7 +509,7 @@ exports.updateServiceLocation = async (req, res) => {
         .optional(),
       photoDescription: joi.string().optional(),
     })
-
+ 
     const { error } = schema.validate(validationData)
     if (error) {
       return res.status(400).json({
@@ -516,14 +517,14 @@ exports.updateServiceLocation = async (req, res) => {
         message: error.details[0].message,
       })
     }
-
+ 
     const updateData = { ...req.body }
-
+ 
     // Use parsed schedule in update data
     if (parsedWeeklySchedule) {
       updateData.weeklySchedule = parsedWeeklySchedule
     }
-
+ 
     // Handle media uploads
     if (req.files && req.files.length > 0) {
       const mediaList = req.files.map((file) => ({
@@ -533,16 +534,16 @@ exports.updateServiceLocation = async (req, res) => {
       }))
       updateData.locationPhotoVideoList = mediaList
     }
-
-    const location = await ServiceLocation.findOneAndUpdate({ _id: locationId, merchantId }, updateData, { new: true })
-
+ 
+    const location = await ServiceLocation.findOneAndUpdate({ _id: req.body.locationId, merchantId }, updateData, { new: true })
+ 
     if (!location) {
       return res.status(404).json({
         status: false,
         message: "Service location not found",
       })
     }
-
+ 
     res.status(200).json({
       status: true,
       message: "Service location updated successfully",
@@ -556,6 +557,7 @@ exports.updateServiceLocation = async (req, res) => {
     })
   }
 }
+ 
 
 // Get Service Location
 exports.getServiceLocation = async (req, res) => {
@@ -961,7 +963,6 @@ exports.getMerchantProfile = async (req, res) => {
     });
   }
 };
-<<<<<<< HEAD
 
 exports.addCoupon = async (req, res) => {
   try {
@@ -1048,5 +1049,3 @@ exports.allCoupans = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-=======
->>>>>>> 4259b0bcd9898e9ccfdda9d01917f645f87b2242
