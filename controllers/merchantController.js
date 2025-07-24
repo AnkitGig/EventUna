@@ -289,7 +289,19 @@ exports.updateServiceProfile = async (req, res) => {
       })
     }
 
+
     const updateData = { ...req.body }
+
+    // Remove keys with blank values (empty string, null, undefined)
+    Object.keys(updateData).forEach((key) => {
+      if (
+        updateData[key] === "" ||
+        updateData[key] === null ||
+        updateData[key] === undefined
+      ) {
+        delete updateData[key]
+      }
+    })
 
     // Parse comma-separated IDs and filter out empty strings
     if (req.body.serviceSubcategoryIds) {
