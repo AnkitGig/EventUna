@@ -326,7 +326,7 @@ exports.updateProfile = async (req, res) => {
       {
         dob: dob || user.dob,
         gender: gender.toLowerCase() || user.gender,
-        profilePic: profilePic,
+        profilePic: profilePic || user.profilePic,
         fullName: fullName || user.fullName,
       },
       { new: true }

@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-const Merchant = require("../models/merchant/Merchant");
-const Services = require("../models/merchant/Services");
-const Subservices = require("../models/merchant/Subservices");
-const Coupan = require("../models/merchant/Coupan");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-const { generateOtp } = require("../utils/otp");
-const joi = require("joi");
-
-=======
 const Merchant = require("../models/merchant/Merchant")
 const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
@@ -22,18 +10,12 @@ const { deleteOldImages } = require("../utils/helpers")
 const { generateOtp } = require("../utils/otp")
 const joi = require("joi")
 
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 const isMerchant = (req, res) => {
   if (req.user && req.user.role === "merchant") {
     return true
   }
-<<<<<<< HEAD
-  return false;
-};
-=======
   return false
 }
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 // Signup
 exports.signup = async (req, res) => {
   try {
@@ -49,15 +31,10 @@ exports.signup = async (req, res) => {
     const { error } = schema.validate(req.body)
     if (error) return res.status(400).json({ status: false, message: error.details[0].message })
 
-<<<<<<< HEAD
-    const { email, mobile, password, serviceId, register_id, ios_register_id } =
-      req.body;
-=======
     let { email, mobile, password, serviceId, register_id, ios_register_id } = req.body
 
     // Always store email in lowercase
     email = email.toLowerCase()
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 
     const existingUser = await Merchant.findOne({
       $or: [{ email }, { mobile }],
@@ -150,15 +127,6 @@ exports.resendOtp = async (req, res) => {
     user.otp = otp
     await user.save()
 
-<<<<<<< HEAD
-    console.log(`Resend OTP ${otp} to mobile: ${user.mobile}`);
-    res.json({ status: true, message: "OTP resent successfully" });
-  } catch (error) {
-    console.error("Error during OTP resend:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-=======
     console.log(`Resend OTP ${otp} to mobile: ${user.mobile}`)
     res.json({ status: true, message: "OTP resent successfully" })
   } catch (error) {
@@ -166,7 +134,6 @@ exports.resendOtp = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" })
   }
 }
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 
 exports.login = async (req, res) => {
   try {
@@ -179,18 +146,12 @@ exports.login = async (req, res) => {
     const { error } = schema.validate(req.body)
     if (error) return res.status(400).json({ status: false, message: error.details[0].message })
 
-<<<<<<< HEAD
-    const { email, password, register_id, ios_register_id } = req.body;
-
-    const user = await Merchant.findOne({ email });
-=======
     let { email, password, register_id, ios_register_id } = req.body
 
     // Always use lowercase for email
     email = email.toLowerCase()
 
     const user = await Merchant.findOne({ email })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ status: false, message: "Invalid credentials" })
 
@@ -216,44 +177,11 @@ exports.login = async (req, res) => {
       ios_register_id: user.ios_register_id,
     })
   } catch (error) {
-<<<<<<< HEAD
-    console.error("Error during login:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
-
-exports.services = async (req, res) => {
-  try {
-    const merchantReponse = await isMerchant(req, res);
-    console.log(`Merchant Reponse: ${merchantReponse}`);
-
-    const services = await Services.find({});
-    if (!services || services.length === 0) {
-      return res
-        .status(404)
-        .json({ status: false, message: "No services found" });
-    }
-
-    res.status(200).json({
-      status: true,
-      message: "Services fetched successfully",
-      services,
-    });
-  } catch (error) {
-    console.error("Error fetching services:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-=======
     console.error("Error during login:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
   }
 };
 
-<<<<<<< HEAD
-exports.subServices = async (req, res) => {
-  try {
-    const { id } = req.query;
-=======
 exports.services = async (req, res) => {
   try {
     const merchantReponse = await isMerchant(req, res)
@@ -263,7 +191,6 @@ exports.services = async (req, res) => {
     if (!services || services.length === 0) {
       return res.status(404).json({ status: false, message: "No services found" })
     }
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 
     res.status(200).json({ status: true, message: "Services fetched successfully", services })
   } catch (error) {
@@ -277,32 +204,6 @@ exports.subServices = async (req, res) => {
     const { id } = req.query
     const schema = joi.object({
       id: joi.string().required(),
-<<<<<<< HEAD
-    });
-    const { error } = schema.validate({ id });
-    if (error)
-      return res
-        .status(400)
-        .json({ status: false, message: error.details[0].message });
-
-    const services = await Subservices.find({
-      serviceId: id,
-    }).select("_id subServicesName serviceId");
-    if (!services || services.length === 0) {
-      return res
-        .status(404)
-        .json({ status: false, message: "No services found" });
-    }
-
-    res.status(200).json({
-      status: true,
-      message: "subservices fetched successfully",
-      services,
-    });
-  } catch (error) {
-    console.error("Error fetching services:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-=======
     })
     const { error } = schema.validate({ id })
     if (error) return res.status(400).json({ status: false, message: error.details[0].message })
@@ -761,7 +662,6 @@ exports.getMerchantProfile = async (req, res) => {
       status: false,
       message: "Internal server error",
     })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
   }
 };
 

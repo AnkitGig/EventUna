@@ -11,12 +11,6 @@ router.post("/resend-otp", merchant.resendOtp)
 router.post("/login", merchant.login)
 router.get("/services", merchant.services)
 router.get("/sub-services", merchant.subServices)
-<<<<<<< HEAD
-router.post("/coupon", protect, merchant.addCoupon)
-router.get("/coupon", protect, merchant.allCoupans)
-// router.get("/coupons", protect, merchant.allCoupans)
-=======
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 
 // New profile and location management routes
 router.put(

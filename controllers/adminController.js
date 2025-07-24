@@ -235,11 +235,7 @@ exports.placePreferences = async (req, res) => {
       statue: true,
       message: "Preference added successfully",
       preference: preference,
-<<<<<<< HEAD
-    });
-=======
     })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
   } catch (error) {
     console.error("Error while adding place preferences :", error)
     res.status(500).json({ status: false, message: "Internal server error" })
@@ -255,11 +251,7 @@ exports.subServices = async (req, res) => {
       serviceId: joi.string().required(),
     })
 
-<<<<<<< HEAD
-    const { error } = schema.validate(req.body);
-=======
     const { error } = schema.validate(req.body)
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
     if (error) {
       return res.status(400).json({ message: error.details[0].message })
     }
@@ -268,11 +260,7 @@ exports.subServices = async (req, res) => {
     const subServices = new SubServices({
       subServicesName: subService,
       serviceId,
-<<<<<<< HEAD
-    });
-=======
     })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
 
     // Save note to database
     await subServices.save()
@@ -281,11 +269,7 @@ exports.subServices = async (req, res) => {
       statue: true,
       message: "subservices added successfully",
       preference: subServices,
-<<<<<<< HEAD
-    });
-=======
     })
->>>>>>> bcbbe10b557abde7a489487f6a9ab6cd36dfc272
   } catch (error) {
     console.error("Error while adding sub-services preferences :", error)
     res.status(500).json({ status: false, message: "Internal server error" })
