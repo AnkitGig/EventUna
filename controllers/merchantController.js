@@ -716,7 +716,7 @@ exports.getServiceLocation = async (req, res) => {
     location.locationPhotoVideoList = location.locationPhotoVideoList.map(
       (media) => ({
         ...media.toObject(),
-        url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
+        url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
       })
     );
 
@@ -756,7 +756,7 @@ exports.getAllServiceLocations = async (req, res) => {
       locationObj.locationPhotoVideoList =
         locationObj.locationPhotoVideoList.map((media) => ({
           ...media,
-          url: `${process.env.BASE_URL}/merchant/locations/${media.type}`,
+          url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
         }));
       return locationObj;
     });
