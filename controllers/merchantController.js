@@ -1,54 +1,4 @@
-// Add more images/videos to a service location by locationId
-exports.addLocationMedia = async (req, res) => {
-  try {
-    const merchantId = req.user.id;
-    const { locationId } = req.body;
-    // Accepts: req.files (array of files), req.body.photoDescription (string or array)
-    if (!locationId) {
-      return res.status(400).json({ status: false, message: "locationId is required" });
-    }
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ status: false, message: "No files uploaded" });
-    }
-    // Find location and check ownership
-    const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
-    if (!location) {
-      return res.status(404).json({ status: false, message: "Service location not found" });
-    }
-    // Support single or multiple descriptions
-    let descriptions = req.body.photoDescription || "";
-    if (Array.isArray(descriptions)) {
-      // ok
-    } else if (typeof descriptions === "string") {
-      descriptions = [descriptions];
-    } else {
-      descriptions = [];
-    }
-    // Build new media objects
-    const newMedia = req.files.map((file, idx) => ({
-      file: file.filename,
-      mediaType: file.mimetype.startsWith("video/") ? "video" : "photo",
-      description: descriptions[idx] || "",
-    }));
-    // Append to locationPhotoVideoList
-    location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia);
-    await location.save();
-    // Add full URLs for response
-    const locationObj = location.toObject();
-    locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
-      ...media,
-      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
-    }));
-    res.status(200).json({
-      status: true,
-      message: "Media uploaded successfully",
-      data: locationObj,
-    });
-  } catch (error) {
-    console.error("Error uploading location media:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
-  }
-};
+
 
 const Merchant = require("../models/merchant/Merchant");
 const Services = require("../models/merchant/Services");
@@ -775,6 +725,58 @@ exports.getAllServiceLocations = async (req, res) => {
   }
 };
 
+
+// Add more images/videos to a service location by locationId
+exports.addLocationMedia = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { locationId } = req.body;
+    // Accepts: req.files (array of files), req.body.photoDescription (string or array)
+    if (!locationId) {
+      return res.status(400).json({ status: false, message: "locationId is required" });
+    }
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ status: false, message: "No files uploaded" });
+    }
+    // Find location and check ownership
+    const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
+    if (!location) {
+      return res.status(404).json({ status: false, message: "Service location not found" });
+    }
+    // Support single or multiple descriptions
+    let descriptions = req.body.photoDescription || "";
+    if (Array.isArray(descriptions)) {
+      // ok
+    } else if (typeof descriptions === "string") {
+      descriptions = [descriptions];
+    } else {
+      descriptions = [];
+    }
+    // Build new media objects
+    const newMedia = req.files.map((file, idx) => ({
+      file: file.filename,
+      mediaType: file.mimetype.startsWith("video/") ? "video" : "photo",
+      description: descriptions[idx] || "",
+    }));
+    // Append to locationPhotoVideoList
+    location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia);
+    await location.save();
+    // Add full URLs for response
+    const locationObj = location.toObject();
+    locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+      ...media,
+      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+    }));
+    res.status(200).json({
+      status: true,
+      message: "Media uploaded successfully",
+      data: locationObj,
+    });
+  } catch (error) {
+    console.error("Error uploading location media:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
 // Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {
