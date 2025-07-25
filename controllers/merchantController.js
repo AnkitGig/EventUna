@@ -667,7 +667,7 @@ exports.getServiceLocation = async (req, res) => {
     if (Array.isArray(locationObj.locationPhotoVideoList)) {
       locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
         ...(media.toObject ? media.toObject() : media),
-        url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+        url: media.file ? `${process.env.BASE_URL}/public/merchant/locations/${media.file}` : undefined,
       }));
     }
 
