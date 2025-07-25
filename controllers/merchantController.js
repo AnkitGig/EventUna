@@ -982,7 +982,7 @@ exports.addCoupon = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
-    const coupon = new Coupan({
+    const coupon = new Coupon({
       couponName,
       discount,
       validFrom: new Date(validFrom),
