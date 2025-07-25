@@ -1,3 +1,6 @@
+
+// Get coupon by ID (expects /coupon/:id)
+// Get all coupons for the current merchant
 const express = require("express")
 const router = express.Router()
 const merchant = require("../controllers/merchantController")
@@ -14,6 +17,7 @@ router.get("/sub-services", merchant.subServices)
 router.get("/restaurant-categories", merchant.getRestaurantCategories)
 
 // New profile and location management routes
+router.get("/profile", protect, merchant.getMerchantProfile)
 router.put(
   "/update-profile",
   protect,
@@ -37,12 +41,20 @@ router.get("/locations", protect, merchant.getAllServiceLocations)
 
 
 // Coupon CRUD routes
+
+// Coupon CRUD routes
+
+// Coupon CRUD routes
 router.post("/add-coupon", protect, merchant.addCoupon)
-router.get("/coupons", protect, merchant.getCouponList)
-router.get("/coupon", protect, merchant.getCouponById) // expects ?couponId=...
-router.put("/coupon", protect, merchant.updateCoupon)   // expects ?couponId=... in query
-router.delete("/coupon", protect, merchant.deleteCoupon) // expects ?couponId=... in query
-
-router.get("/profile", protect, merchant.getMerchantProfile)
-
+router.post("/update-coupon", protect, merchant.updateCoupon)
+router.post("/delete-coupon", protect, merchant.deleteCoupon)
+router.get("/all-coupons", protect, merchant.getAllCoupons);
+router.get("/coupon", protect, merchant.getCouponById);
+// Add more images/videos to a service location by locationId
+router.post(
+  "/add-location-media",
+  protect,
+  uploadLocationMedia.array("media", 10), // field name: media, max 10 files
+  merchant.addLocationMedia
+);
 module.exports = router
