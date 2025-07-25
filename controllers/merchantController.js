@@ -972,8 +972,8 @@ exports.addCoupon = async (req, res) => {
     const schema = joi.object({
       couponName: joi.string().required(),
       discount: joi.number().required(),
-      validFrom: joi.string().required(),
-      validTo: joi.string().required(),
+      validFrom: joi.string().required(), // Expecting dd-mm-yyyy
+      validTo: joi.string().required(),   // Expecting dd-mm-yyyy
       description: joi.string().required(),
     });
 
@@ -983,11 +983,17 @@ exports.addCoupon = async (req, res) => {
         .status(400)
         .json({ status: false, message: error.details[0].message });
 
+    // Parse dd-mm-yyyy to Date
+    function parseDDMMYYYY(str) {
+      const [dd, mm, yyyy] = str.split("-");
+      return new Date(`${yyyy}-${mm}-${dd}`);
+    }
+
     const coupon = new Coupon({
       couponName,
       discount,
-      validFrom: new Date(validFrom),
-      validTo: new Date(validTo),
+      validFrom: parseDDMMYYYY(validFrom),
+      validTo: parseDDMMYYYY(validTo),
       description,
       userId: req.user.id,
     });
@@ -997,7 +1003,6 @@ exports.addCoupon = async (req, res) => {
     res.status(200).json({
       status: true,
       message: "Coupon added successfully",
-      // data: coupon,
     });
   } catch (error) {
     console.error("Error while adding coupon:", error);
@@ -1051,10 +1056,22 @@ exports.getCouponById = async (req, res) => {
         message: "Coupon not found",
       });
     }
+    // Format validFrom and validTo as dd-mm-yyyy
+    function formatDDMMYYYY(date) {
+      if (!date) return "";
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    const couponObj = coupon.toObject();
+    couponObj.validFrom = formatDDMMYYYY(couponObj.validFrom);
+    couponObj.validTo = formatDDMMYYYY(couponObj.validTo);
     res.status(200).json({
       status: true,
       message: "Coupon retrieved successfully",
-      data: coupon,
+      data: couponObj,
     });
   } catch (error) {
     console.error("Error getting coupon by id:", error);
