@@ -662,18 +662,19 @@ exports.getServiceLocation = async (req, res) => {
       });
     }
 
-    // Add full URLs for media files
-    location.locationPhotoVideoList = location.locationPhotoVideoList.map(
-      (media) => ({
-        ...media.toObject(),
+    // Add full URLs for media files (handle both Mongoose docs and plain objects)
+    let locationObj = location.toObject ? location.toObject() : location;
+    if (Array.isArray(locationObj.locationPhotoVideoList)) {
+      locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+        ...(media.toObject ? media.toObject() : media),
         url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
-      })
-    );
+      }));
+    }
 
     res.status(200).json({
       status: true,
       message: "Service location retrieved successfully",
-      data: location,
+      data: locationObj,
     });
   } catch (error) {
     console.error("Error getting service location:", error);
