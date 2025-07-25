@@ -1,3 +1,4 @@
+
 const Merchant = require("../models/merchant/Merchant");
 const Services = require("../models/merchant/Services");
 const Subservices = require("../models/merchant/Subservices");
@@ -1015,6 +1016,81 @@ exports.getCouponById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting coupon by id:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+// Update a coupon by its ID for the current merchant
+exports.updateCoupon = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { couponId, couponName, discount, validFrom, validTo, description } = req.body;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId is required",
+      });
+    }
+
+    // Validate input (allow partial update)
+    const schema = require("joi").object({
+      couponId: require("joi").string().required(),
+      couponName: require("joi").string().optional(),
+      discount: require("joi").number().optional(),
+      validFrom: require("joi").string().optional(), // Expecting dd-mm-yyyy
+      validTo: require("joi").string().optional(), // Expecting dd-mm-yyyy
+      description: require("joi").string().optional(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        status: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // Find the coupon and ensure it belongs to the merchant
+    const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    // Prepare update data
+    const updateData = {};
+    if (couponName !== undefined) updateData.couponName = couponName;
+    if (discount !== undefined) updateData.discount = discount;
+    if (validFrom !== undefined) {
+      // Parse dd-mm-yyyy to Date
+      const [dd, mm, yyyy] = validFrom.split("-");
+      updateData.validFrom = new Date(`${yyyy}-${mm}-${dd}`);
+    }
+    if (validTo !== undefined) {
+      const [dd, mm, yyyy] = validTo.split("-");
+      updateData.validTo = new Date(`${yyyy}-${mm}-${dd}`);
+    }
+    if (description !== undefined) updateData.description = description;
+
+    const updatedCoupon = await Coupon.findByIdAndUpdate(
+      couponId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon updated successfully",
+      data: updatedCoupon,
+    });
+  } catch (error) {
+    console.error("Error updating coupon:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",
