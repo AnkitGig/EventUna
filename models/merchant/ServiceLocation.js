@@ -53,16 +53,13 @@ const serviceLocationSchema = new mongoose.Schema(
         },
       },
     ],
-    locationPhotoVideoList: [
-      {
-        type: String, // file path
-        mediaType: {
-          type: String,
-          enum: ["photo", "video"],
-        },
-        description: String,
-      },
-    ],
+   locationPhotoVideoList: [
+  {
+    file: { type: String }, // file path
+    mediaType: { type: String, enum: ["photo", "video"] },
+    description: String,
+  },
+],
   },
   { timestamps: true },
 )

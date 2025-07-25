@@ -1,3 +1,4 @@
+
 // Get coupon by ID (expects /coupon/:id)
 // Get all coupons for the current merchant
 const express = require("express")
@@ -49,5 +50,11 @@ router.post("/update-coupon", protect, merchant.updateCoupon)
 router.post("/delete-coupon", protect, merchant.deleteCoupon)
 router.get("/all-coupons", protect, merchant.getAllCoupons);
 router.get("/coupon", protect, merchant.getCouponById);
-
+// Add more images/videos to a service location by locationId
+router.post(
+  "/add-location-media",
+  protect,
+  uploadLocationMedia.array("media", 10), // field name: media, max 10 files
+  merchant.addLocationMedia
+);
 module.exports = router
