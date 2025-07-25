@@ -1,3 +1,5 @@
+// Get coupon by ID (expects /coupon/:id)
+// Get all coupons for the current merchant
 const express = require("express")
 const router = express.Router()
 const merchant = require("../controllers/merchantController")
@@ -37,12 +39,13 @@ router.get("/locations", protect, merchant.getAllServiceLocations)
 
 
 // Coupon CRUD routes
-router.post("/add-coupon", protect, merchant.addCoupon)
-router.get("/coupons", protect, merchant.getCouponList)
-router.get("/coupon", protect, merchant.getCouponById) // expects ?couponId=...
+router.post("/add-coupon", protect, merchant.addCoupon) // expects ?couponId=...
 router.put("/coupon", protect, merchant.updateCoupon)   // expects ?couponId=... in query
 router.delete("/coupon", protect, merchant.deleteCoupon) // expects ?couponId=... in query
 
 router.get("/profile", protect, merchant.getMerchantProfile)
 
 module.exports = router
+
+router.get("/all-coupons", protect, merchant.getAllCoupons);
+router.get("/coupon", protect, merchant.getCouponById);

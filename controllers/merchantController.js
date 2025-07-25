@@ -1,3 +1,4 @@
+
 const Merchant = require("../models/merchant/Merchant")
 const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
@@ -1004,48 +1005,62 @@ exports.addCoupon = async (req, res) => {
   }
 };
 
-exports.allCoupans = async (req, res) => {
+
+// Get all coupons for the current merchant
+exports.getAllCoupons = async (req, res) => {
   try {
-    const { id } = req.query; // ✅ Corrected destructuring
-
-    if (id) {
-      const coupan = await Coupan.findById(id);
-      if (!coupan)
-        return res
-          .status(404)
-          .json({ status: false, message: "Coupon does not exist" });
-
-      return res.status(200).json({
-        status: true,
-        message: "Coupon fetched successfully",
-        data: coupan,
+    const merchantId = req.user.id;
+    // Find all coupons where userId matches the merchant's id
+    const coupons = await Coupon.find({ userId: merchantId }).sort({ createdAt: -1 });
+    if (!coupons || coupons.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No coupons found",
+        data: [],
       });
     }
-
-    const coupans = await Coupan.find();
-
-    for (const item of coupans) {
-      if (new Date(item.validTo) < new Date()) {
-        if (item.isActive) {
-          item.isActive = false;
-          // item.isActive = item.isActive? false: true;
-          await item.save(); 
-        }
-      }
-    }
-
-    if (!coupans || coupans.length === 0)
-      return res
-        .status(404)
-        .json({ status: false, message: "No coupons found" });
-
-    return res.status(200).json({
+    res.status(200).json({
       status: true,
-      message: "Coupons fetched successfully",
-      data: coupans,
+      message: "Coupons retrieved successfully",
+      data: coupons,
     });
   } catch (error) {
-    console.error("Error while fetching coupon(s):", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
+    console.error("Error getting all coupons:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get a coupon by its ID (using query param)
+exports.getCouponById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const couponId = req.query.couponId;
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId query parameter is required",
+      });
+    }
+    const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found",
+      });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Coupon retrieved successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error getting coupon by id:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
   }
 };
