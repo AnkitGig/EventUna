@@ -16,6 +16,7 @@ router.get("/sub-services", merchant.subServices)
 router.get("/restaurant-categories", merchant.getRestaurantCategories)
 
 // New profile and location management routes
+router.get("/profile", protect, merchant.getMerchantProfile)
 router.put(
   "/update-profile",
   protect,
@@ -39,13 +40,8 @@ router.get("/locations", protect, merchant.getAllServiceLocations)
 
 
 // Coupon CRUD routes
-router.post("/add-coupon", protect, merchant.addCoupon) // expects ?couponId=...
-router.put("/coupon", protect, merchant.updateCoupon)   // expects ?couponId=... in query
-router.delete("/coupon", protect, merchant.deleteCoupon) // expects ?couponId=... in query
-
-router.get("/profile", protect, merchant.getMerchantProfile)
+router.post("/add-coupon", protect, merchant.addCoupon)
+router.post("/delete-coupon", protect, merchant.deleteCoupon)
+router.get("/all-coupons", protect, merchant.getAllCoupons);
 
 module.exports = router
-
-router.get("/all-coupons", protect, merchant.getAllCoupons);
-router.get("/coupon", protect, merchant.getCouponById);
