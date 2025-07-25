@@ -40,8 +40,11 @@ router.get("/locations", protect, merchant.getAllServiceLocations)
 
 
 // Coupon CRUD routes
+
+// Coupon CRUD routes
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.post("/delete-coupon", protect, merchant.deleteCoupon)
 router.get("/all-coupons", protect, merchant.getAllCoupons);
+router.get("/coupon", protect, merchant.getCouponById);
 
 module.exports = router

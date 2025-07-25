@@ -984,3 +984,40 @@ exports.deleteCoupon = async (req, res) => {
     });
   }
 };
+
+
+// Get a coupon by its ID for the current merchant
+exports.getCouponById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const couponId = req.query.couponId;
+
+    if (!couponId) {
+      return res.status(400).json({
+        status: false,
+        message: "couponId is required in query",
+      });
+    }
+
+    // Find the coupon and ensure it belongs to the merchant
+    const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
+    if (!coupon) {
+      return res.status(404).json({
+        status: false,
+        message: "Coupon not found or not authorized",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Coupon retrieved successfully",
+      data: coupon,
+    });
+  } catch (error) {
+    console.error("Error getting coupon by id:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
