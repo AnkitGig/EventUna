@@ -608,15 +608,7 @@ exports.updateServiceLocation = async (req, res) => {
     }
 
     // Handle media uploads
-    if (req.files && req.files.length > 0) {
-      const mediaList = req.files.map((file) => ({
-        type: file.filename,
-        mediaType: file.mimetype.startsWith("video/") ? "video" : "photo",
-        description: req.body.photoDescription || "",
-      }));
-      updateData.locationPhotoVideoList = mediaList;
-    }
-
+   
     const location = await ServiceLocation.findOneAndUpdate(
       { _id: req.body.locationId, merchantId },
       updateData,
