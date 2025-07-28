@@ -83,15 +83,15 @@ exports.addProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const { categoryId, subcategoryId } = req.query;
+    const { categoryId, subcategoryId, merchantId } = req.query;
     const filter = {};
     if (categoryId) filter.categoryId = categoryId;
     if (subcategoryId) filter.subcategoryId = subcategoryId;
-    // Always use merchantId from token (req.user.id)
-    if (req.user && req.user.id) {
+    // If merchantId is provided in query, use it. Otherwise, if authenticated, use req.user.id
+    if (merchantId) {
+      filter.merchantId = merchantId;
+    } else if (req.user && req.user.id) {
       filter.merchantId = req.user.id;
-    } else {
-      return res.status(401).json({ status: false, message: 'Unauthorized: No merchant token found' });
     }
     const products = await Product.find(filter).populate('categoryId').populate('subcategoryId');
     res.json({ status: true, data: products });
