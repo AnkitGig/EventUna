@@ -778,6 +778,89 @@ exports.addLocationMedia = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+// Update a specific media item by its id in a service location
+exports.updateLocationMediaById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { locationId, mediaId, description } = req.body;
+    if (!locationId || !mediaId) {
+      return res.status(400).json({ status: false, message: "locationId and mediaId are required" });
+    }
+    // Find location and check ownership
+    const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
+    if (!location) {
+      return res.status(404).json({ status: false, message: "Service location not found" });
+    }
+    // Find media by id (mediaId is the _id of the subdocument or index)
+    const mediaItem = location.locationPhotoVideoList.id
+      ? location.locationPhotoVideoList.id(mediaId)
+      : location.locationPhotoVideoList.find((m) => m._id?.toString() === mediaId || m.id === mediaId);
+    if (!mediaItem) {
+      return res.status(404).json({ status: false, message: "Media item not found" });
+    }
+    // Update description (and optionally file if new file is uploaded)
+    if (description !== undefined) mediaItem.description = description;
+    if (req.file) {
+      mediaItem.file = req.file.filename;
+      mediaItem.mediaType = req.file.mimetype.startsWith("video/") ? "video" : "photo";
+    }
+    await location.save();
+    // Add full URLs for response
+    const locationObj = location.toObject();
+    locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+      ...media,
+      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+    }));
+    res.status(200).json({
+      status: true,
+      message: "Media updated successfully",
+      data: locationObj,
+    });
+  } catch (error) {
+    console.error("Error updating location media:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+// Delete a specific media item by its id in a service location
+exports.deleteLocationMediaById = async (req, res) => {
+  try {
+    const merchantId = req.user.id;
+    const { locationId, mediaId } = req.body;
+    if (!locationId || !mediaId) {
+      return res.status(400).json({ status: false, message: "locationId and mediaId are required" });
+    }
+    // Find location and check ownership
+    const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
+    if (!location) {
+      return res.status(404).json({ status: false, message: "Service location not found" });
+    }
+    // Remove media by id
+    const initialLength = location.locationPhotoVideoList.length;
+    location.locationPhotoVideoList = location.locationPhotoVideoList.filter((media) =>
+      (media._id?.toString() !== mediaId && media.id !== mediaId)
+    );
+    if (location.locationPhotoVideoList.length === initialLength) {
+      return res.status(404).json({ status: false, message: "Media item not found" });
+    }
+    await location.save();
+    // Add full URLs for response
+    const locationObj = location.toObject();
+    locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
+      ...media,
+      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+    }));
+    res.status(200).json({
+      status: true,
+      message: "Media deleted successfully",
+      data: locationObj,
+    });
+  } catch (error) {
+    console.error("Error deleting location media:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
 // Get Merchant Profile - FIXED VERSION
 exports.getMerchantProfile = async (req, res) => {
   try {
