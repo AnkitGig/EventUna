@@ -14,6 +14,6 @@ router.get('/subcategories', productController.getSubcategories);
 
 // Product routes
 router.post('/product', protect, uploadProductPhoto.single('photo'), productController.addProduct);
-router.get('/products',protect, productController.getProducts);
+router.get('/products', productController.getProducts);
 
 module.exports = router;
