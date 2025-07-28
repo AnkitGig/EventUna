@@ -802,6 +802,13 @@ exports.updateLocationMediaById = async (req, res) => {
     // Update description (and optionally file if new file is uploaded)
     if (description !== undefined) mediaItem.description = description;
     if (req.file) {
+      // Delete old file from disk if exists
+      const fs = require('fs');
+      const path = require('path');
+      if (mediaItem.file) {
+        const oldFilePath = path.join(__dirname, '../public/merchant/locations', mediaItem.file);
+        fs.unlink(oldFilePath, (err) => { if (err) console.error('Failed to delete old media file:', err); });
+      }
       mediaItem.file = req.file.filename;
       mediaItem.mediaType = req.file.mimetype.startsWith("video/") ? "video" : "photo";
     }
@@ -836,14 +843,22 @@ exports.deleteLocationMediaById = async (req, res) => {
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" });
     }
-    // Remove media by id
-    const initialLength = location.locationPhotoVideoList.length;
+    // Remove media by id and delete file from disk
+    const fs = require('fs');
+    const path = require('path');
+    const mediaToDelete = location.locationPhotoVideoList.find((media) =>
+      (media._id?.toString() === mediaId || media.id === mediaId)
+    );
+    if (!mediaToDelete) {
+      return res.status(404).json({ status: false, message: "Media item not found" });
+    }
+    if (mediaToDelete.file) {
+      const filePath = path.join(__dirname, '../public/merchant/locations', mediaToDelete.file);
+      fs.unlink(filePath, (err) => { if (err) console.error('Failed to delete media file:', err); });
+    }
     location.locationPhotoVideoList = location.locationPhotoVideoList.filter((media) =>
       (media._id?.toString() !== mediaId && media.id !== mediaId)
     );
-    if (location.locationPhotoVideoList.length === initialLength) {
-      return res.status(404).json({ status: false, message: "Media item not found" });
-    }
     await location.save();
     // Add full URLs for response
     const locationObj = location.toObject();
