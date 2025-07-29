@@ -88,4 +88,33 @@ const uploadLocationMedia = multer({
   },
 })
 
-module.exports = { uploadMerchantProfile, uploadLocationMedia }
+// Storage for product photos
+const productPhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = "./public/merchant/products/";
+    ensureDirectoryExists(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const uploadProductPhoto = multer({
+  storage: productPhotoStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Invalid file type for product photo. Allowed types: JPEG, JPG, PNG"));
+    }
+  },
+});
+
+module.exports = { uploadMerchantProfile, uploadLocationMedia, uploadProductPhoto }

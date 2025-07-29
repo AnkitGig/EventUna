@@ -57,4 +57,19 @@ router.post(
   uploadLocationMedia.array("media", 10), // field name: media, max 10 files
   merchant.addLocationMedia
 );
+
+// Update a specific media item by its id in a service location
+router.put(
+  "/update-location-media",
+  protect,
+  uploadLocationMedia.single("media"),
+  merchant.updateLocationMediaById
+);
+
+// Delete a specific media item by its id in a service location
+router.delete(
+  "/delete-location-media",
+  protect,
+  merchant.deleteLocationMediaById
+);
 module.exports = router

@@ -4,6 +4,7 @@ const path = require("path");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
 const indexRoutes = require("./routes/indexRoutes");
+const productRoutes = require("./routes/productRoutes");
 const { createDirectories } = require("./utils/directorySetup");
 const multer = require("multer"); // Import multer
 
@@ -26,6 +27,9 @@ connectDB();
 // ✅ Middlewares
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Product/category/subcategory APIs
+app.use("/api/products", productRoutes);
 
 
 // ✅ Serve all static files (incl. video streaming) from 'public' and its subfolders via /api/*

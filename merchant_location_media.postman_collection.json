@@ -1,0 +1,73 @@
+{
+  "info": {
+    "_postman_id": "merchant-location-media-collection-2025",
+    "name": "Merchant Location Media API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Add Location Media",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "locationId", "value": "<locationId>", "type": "text" },
+            { "key": "photoDescription", "value": "Sample description", "type": "text" },
+            { "key": "media", "type": "file", "src": "" }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/merchant/add-location-media",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "merchant", "add-location-media" ]
+        }
+      }
+    },
+    {
+      "name": "Update Location Media By Id",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "locationId", "value": "<locationId>", "type": "text" },
+            { "key": "mediaId", "value": "<mediaId>", "type": "text" },
+            { "key": "description", "value": "Updated description", "type": "text" },
+            { "key": "media", "type": "file", "src": "" }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/merchant/update-location-media",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "merchant", "update-location-media" ]
+        }
+      }
+    },
+    {
+      "name": "Delete Location Media By Id",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"locationId\": \"<locationId>\",\n  \"mediaId\": \"<mediaId>\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/merchant/delete-location-media",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "merchant", "delete-location-media" ]
+        }
+      }
+    }
+  ]
+}
