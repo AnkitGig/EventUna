@@ -13,7 +13,7 @@ router.post('/subcategory', protect, productController.addSubcategory);
 router.get('/subcategories',protect, productController.getSubcategories);
 
 // Product routes
-router.post('/product', protect, uploadProductPhoto.single('photo'), productController.addProduct);
+router.post('/product', protect, uploadProductPhoto.array('photo'), productController.addProduct);
 router.get('/products', protect, productController.getProducts);
 
 module.exports = router;

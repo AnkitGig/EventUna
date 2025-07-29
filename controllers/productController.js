@@ -118,14 +118,26 @@ exports.addProduct = async (req, res) => {
         .status(404)
         .json({ status: false, message: "Category or Subcategory not found" });
     }
-    let photo = null;
-    if (req.file) photo = req.file.filename;
+
+    let photoArry = [];
+
+    if (!req.files || req.files.length === 0)
+      return res
+        .status(400)
+        .json({ status: false, message: "No photo uploaded" });
+
+    req.files.map((file) => {
+      photoArry.push(file.filename);
+    });
+
+    console.log(photoArry);
+
     const merchantId = req.user.id;
     const product = new Product({
       name,
       description,
       price,
-      photo,
+      photo: photoArry,
       categoryId,
       subcategoryId,
       merchantId,
@@ -160,10 +172,12 @@ exports.getProducts = async (req, res) => {
       .populate("categoryId")
       .populate("subcategoryId");
 
-
-    products.map((product)=>{
-      product.photo = product.photo ? `${process.env.BASE_URL}/merchant/products/${product.photo}` : null;
-    })
+    products.map((product) => {
+      product.photo = product.photo.map((photo)=>{
+        return `${process.env.BASE_URL}/merchant/products/${photo}`;
+      })
+      
+    });
     res.json({ status: true, data: products });
   } catch (err) {
     res.status(500).json({ status: false, message: err.message });
