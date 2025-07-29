@@ -70,7 +70,16 @@ exports.addSubcategory = async (req, res) => {
 
 exports.getSubcategories = async (req, res) => {
   try {
-    const { categoryId } = req.query;
+    const { categoryId } = req.body;
+
+    const schema = joi.object({
+      categoryId: joi.string().required(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
 
     const category = await Category.findById(categoryId);
     if (!category) {
@@ -153,30 +162,17 @@ exports.addProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const { categoryId, subcategoryId } = req.query;
-
-    const category = await Category.findById(categoryId);
-    const subcategory = await Subcategory.findById(subcategoryId);
-
-    if (!category || !subcategory) {
+    const products = await Product.find({ merchantId: req.user.id });
+    if (products.length === 0) {
       return res
         .status(404)
-        .json({ status: false, message: "Category or Subcategory not found" });
+        .json({ status: false, message: "No products found" });
     }
 
-    const products = await Product.find({
-      categoryId,
-      subcategoryId,
-      merchantId: req.user.id,
-    })
-      .populate("categoryId")
-      .populate("subcategoryId");
-
     products.map((product) => {
-      product.photo = product.photo.map((photo)=>{
+      product.photo = product.photo.map((photo) => {
         return `${process.env.BASE_URL}/merchant/products/${photo}`;
-      })
-      
+      });
     });
     res.json({ status: true, data: products });
   } catch (err) {

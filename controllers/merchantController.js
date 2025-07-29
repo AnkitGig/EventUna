@@ -46,8 +46,10 @@ exports.signup = async (req, res) => {
     const existingUser = await Merchant.findOne({
       $or: [{ email }, { mobile }],
     });
+
+    
     if (existingUser) {
-      if (existingUser.isVerified == true) {
+      if (existingUser.isVerified == false) {
         const otp = generateOtp();
         existingUser.otp = otp;
         await existingUser.save();
