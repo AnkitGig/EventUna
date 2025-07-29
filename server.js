@@ -22,12 +22,13 @@ createDirectories();
 // ✅ Connect to DB
 connectDB();
 
+
 // ✅ Middlewares
 app.use(express.json());
 app.use(morgan("dev"));
 
 
-
+// ✅ Serve all static files (incl. video streaming) from 'public' and its subfolders via /api/*
 app.get("/api/merchant/locations/:filename", (req, res) => {
   const filePath = path.join(__dirname, "public/merchant/locations", req.params.filename);
 
