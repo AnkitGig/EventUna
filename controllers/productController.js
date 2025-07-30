@@ -2,6 +2,7 @@ const Category = require("../models/merchant/Category");
 const Subcategory = require("../models/merchant/Subcategory");
 const Product = require("../models/merchant/Product");
 const joi = require("joi");
+const { deleteOldImages } = require("../utils/helpers");
 
 // CATEGORY CRUD
 exports.addCategory = async (req, res) => {
@@ -34,6 +35,58 @@ exports.getCategories = async (req, res) => {
     res.status(500).json({ status: false, message: err.message });
   }
 };
+
+exports.deleteCategory = async(req,res)=>{
+  try {
+    const { categoryId } = req.body;
+
+    const schema = joi.object({
+      categoryId: joi.string().required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+    
+    const category = await Category.findOne({ _id: categoryId, userId: req.user.id });
+
+    if (!category) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Category not found" });
+    }
+
+    await Category.deleteOne({ _id: categoryId, userId: req.user.id });
+    await Subcategory.deleteMany({ categoryId: categoryId, userId: req.user.id });
+    
+    res.json({ status: true, message: "Category deleted successfully" });
+    
+  } catch (error) {
+    console.log(`Error while deleting category: ${error.message}`);
+    res.status(500).json({ status: false, message: error.message });
+    
+  }
+}
+
+// exports.deleteCategory = async(req,res)=>{
+//   try {
+//     const { categoryId } = req.params;
+//     const category = await Category.findById(categoryId);
+//     if (!category) {
+//       return res
+//         .status(404)
+//         .json({ status: false, message: "Category not found" });
+//     }
+//     await Category.deleteOne({ _id: categoryId });
+//     await Subcategory.deleteMany({ categoryId: categoryId });
+//     res.json({ status: true, message: "Category deleted successfully" });
+//   } catch (err) {
+//     console.log(`Error deleting category: ${err.message}`);
+//     res.status(500).json({ status: false, message: err.message });
+//   }
+// }
 
 // SUBCATEGORY CRUD
 exports.addSubcategory = async (req, res) => {
@@ -102,6 +155,38 @@ exports.getSubcategories = async (req, res) => {
     res.status(500).json({ status: false, message: err.message });
   }
 };
+
+exports.deleteSubcategory = async(req, res)=>{
+  try {
+    const { subcategoryId } = req.body;
+
+    const schema = joi.object({
+      subcategoryId: joi.string().required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+    const subcategory = await Subcategory.findOne({ _id: subcategoryId, userId: req.user.id });
+
+   
+    if (!subcategory) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Subcategory not found" });
+    }
+
+    await Subcategory.deleteOne({ _id: subcategoryId, userId: req.user.id });
+    res.json({ status: true, message: "Subcategory deleted successfully" });
+    
+  } catch (error) {
+    console.log(`Error while deleting subcategory: ${error.message}`);
+    res.status(500).json({ status: false, message: error.message });
+    
+  }
+}
 
 // PRODUCT CRUD
 exports.addProduct = async (req, res) => {
@@ -177,5 +262,41 @@ exports.getProducts = async (req, res) => {
     res.json({ status: true, data: products });
   } catch (err) {
     res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    const schema = joi.object({
+      productId: joi.string().required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+    const product = await Product.findOne({
+      _id: productId,
+      merchantId: req.user.id,
+    });
+
+    console.log(product);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Product not found" });
+    }
+
+    await Product.deleteOne({ _id: productId, merchantId: req.user.id });
+    product.photo.map((photo) => {
+      deleteOldImages("merchant/products", photo);
+    });
+    res.json({ status: true, message: "Product deleted successfully" });
+  } catch (error) {
+    console.log(`Error while deleting product: ${error.message}`);
+    res.status(500).json({ status: false, message: error.message });
   }
 };
