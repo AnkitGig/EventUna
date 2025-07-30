@@ -7,16 +7,17 @@ const { uploadProductPhoto } = require('../middleware/merchantMulter');
 // Category routes
 router.post('/category', protect, productController.addCategory);
 router.get('/categories', protect, productController.getCategories);
-router.delete('/category', protect, productController.deleteCategory)
+router.delete('/category', protect, productController.deleteCategory);
 
 // Subcategory routes
 router.post('/subcategory', protect, productController.addSubcategory);
 router.get('/subcategories',protect, productController.getSubcategories);
-router.delete('/subcategory', protect, productController.deleteSubcategory)
+router.delete('/subcategory', protect, productController.deleteSubcategory);
 
 // Product routes
 router.post('/product', protect, uploadProductPhoto.array('photo'), productController.addProduct);
 router.get('/products', protect, productController.getProducts);
 router.delete('/product', protect, productController.deleteProduct)
+router.put('/product', protect,uploadProductPhoto.array("photos"), productController.updateProduct);
 
 module.exports = router;
