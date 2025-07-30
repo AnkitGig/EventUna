@@ -2,6 +2,9 @@ const Category = require("../models/merchant/Category");
 const Subcategory = require("../models/merchant/Subcategory");
 const Product = require("../models/merchant/Product");
 const joi = require("joi");
+const { parseJsonArray } = require("../utils/helpers");
+
+const mongoose = require("mongoose");
 const { deleteOldImages } = require("../utils/helpers");
 
 // CATEGORY CRUD
@@ -36,7 +39,7 @@ exports.getCategories = async (req, res) => {
   }
 };
 
-exports.deleteCategory = async(req,res)=>{
+exports.deleteCategory = async (req, res) => {
   try {
     const { categoryId } = req.body;
 
@@ -49,8 +52,11 @@ exports.deleteCategory = async(req,res)=>{
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-    
-    const category = await Category.findOne({ _id: categoryId, userId: req.user.id });
+
+    const category = await Category.findOne({
+      _id: categoryId,
+      userId: req.user.id,
+    });
 
     if (!category) {
       return res
@@ -59,16 +65,17 @@ exports.deleteCategory = async(req,res)=>{
     }
 
     await Category.deleteOne({ _id: categoryId, userId: req.user.id });
-    await Subcategory.deleteMany({ categoryId: categoryId, userId: req.user.id });
-    
+    await Subcategory.deleteMany({
+      categoryId: categoryId,
+      userId: req.user.id,
+    });
+
     res.json({ status: true, message: "Category deleted successfully" });
-    
   } catch (error) {
     console.log(`Error while deleting category: ${error.message}`);
     res.status(500).json({ status: false, message: error.message });
-    
   }
-}
+};
 
 // exports.deleteCategory = async(req,res)=>{
 //   try {
@@ -156,7 +163,7 @@ exports.getSubcategories = async (req, res) => {
   }
 };
 
-exports.deleteSubcategory = async(req, res)=>{
+exports.deleteSubcategory = async (req, res) => {
   try {
     const { subcategoryId } = req.body;
 
@@ -169,9 +176,11 @@ exports.deleteSubcategory = async(req, res)=>{
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-    const subcategory = await Subcategory.findOne({ _id: subcategoryId, userId: req.user.id });
+    const subcategory = await Subcategory.findOne({
+      _id: subcategoryId,
+      userId: req.user.id,
+    });
 
-   
     if (!subcategory) {
       return res
         .status(404)
@@ -180,13 +189,11 @@ exports.deleteSubcategory = async(req, res)=>{
 
     await Subcategory.deleteOne({ _id: subcategoryId, userId: req.user.id });
     res.json({ status: true, message: "Subcategory deleted successfully" });
-    
   } catch (error) {
     console.log(`Error while deleting subcategory: ${error.message}`);
     res.status(500).json({ status: false, message: error.message });
-    
   }
-}
+};
 
 // PRODUCT CRUD
 exports.addProduct = async (req, res) => {
@@ -215,14 +222,17 @@ exports.addProduct = async (req, res) => {
 
     let photoArry = [];
 
+    console.log(req.files);
+
     if (!req.files || req.files.length === 0)
       return res
         .status(400)
         .json({ status: false, message: "No photo uploaded" });
 
-    req.files.map((file) => {
-      photoArry.push(file.filename);
-    });
+    photoArry = req.files.map((file) => ({
+      _id: new mongoose.Types.ObjectId(),
+      fileName: file.filename,
+    }));
 
     console.log(photoArry);
 
@@ -241,6 +251,7 @@ exports.addProduct = async (req, res) => {
       .status(201)
       .json({ status: true, message: "Product created", data: product });
   } catch (err) {
+    console.log(`Error while adding product: ${err.message}`);
     res.status(500).json({ status: false, message: err.message });
   }
 };
@@ -256,7 +267,7 @@ exports.getProducts = async (req, res) => {
 
     products.map((product) => {
       product.photo = product.photo.map((photo) => {
-        return `${process.env.BASE_URL}/merchant/products/${photo}`;
+        return (photo.fileName = `${process.env.BASE_URL}/merchant/products/${photo.fileName}`);
       });
     });
     res.json({ status: true, data: products });
@@ -297,6 +308,93 @@ exports.deleteProduct = async (req, res) => {
     res.json({ status: true, message: "Product deleted successfully" });
   } catch (error) {
     console.log(`Error while deleting product: ${error.message}`);
+    res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const { productId, name, description, price, categoryId, subcategoryId } =
+    req.body;
+    const imageIds = parseJsonArray("imageIds", req);
+    req.body.imageIds = imageIds;
+
+    const schema = joi.object({
+      productId: joi.string().required(),
+      name: joi.string().optional(),
+      description: joi.string().optional(),
+      price: joi.number().optional(),
+      categoryId: joi.string().optional(),
+      subcategoryId: joi.string().optional(),
+      imageIds: joi.array().items(joi.string().optional()).min(1).optional(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res
+        .status(400)
+        .json({ status: false, message: error.details[0].message });
+
+    const product = await Product.findOne({
+      _id: productId,
+      merchantId: req.user.id,
+    });
+    if (!product) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Product not found" });
+    }
+
+    if (imageIds && imageIds.length > 0) {
+      const idsToDelete = new Set(imageIds.map((id) => id.toString()));
+
+      // Call helper function to delete files
+      product.photo.forEach((img) => {
+        if (idsToDelete.has(img._id.toString())) {
+          deleteOldImages("merchant/products", img.fileName);
+        }
+      });
+
+      // Remove from DB photo array
+      product.photo = product.photo.filter(
+        (img) => !idsToDelete.has(img._id.toString())
+      );
+
+      // Save changes to DB
+      await product.save();
+    }
+
+    if (req.files && req.files.length > 0) {
+      const newPhotos = req.files.map((file) => ({
+        _id: new mongoose.Types.ObjectId(),
+        fileName: file.filename,
+      }));
+      product.photo.push(...newPhotos);
+
+      console.log("New photos added:", newPhotos);
+      await product.save();
+
+      await Product.findByIdAndUpdate(
+        productId,
+        {
+          name: name || product.name,
+          description: description || product.description,
+          price: price || product.price,
+          categoryId: categoryId || product.categoryId,
+          subcategoryId: subcategoryId || product.subcategoryId,
+        },
+        { new: true }
+      );
+
+      await product.save();
+    }
+    res.json({
+      status: true,
+      message: "Product updated successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.log(`Error while updating product: ${error.message}`);
     res.status(500).json({ status: false, message: error.message });
   }
 };
