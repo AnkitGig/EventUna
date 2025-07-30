@@ -314,10 +314,10 @@ exports.deleteProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const { productId, name, description, price, categoryId, subcategoryId } =
-    req.body;
     const imageIds = parseJsonArray("imageIds", req);
     req.body.imageIds = imageIds;
+    const { productId, name, description, price, categoryId, subcategoryId } =
+      req.body;
 
     const schema = joi.object({
       productId: joi.string().required(),
@@ -328,6 +328,8 @@ exports.updateProduct = async (req, res) => {
       subcategoryId: joi.string().optional(),
       imageIds: joi.array().items(joi.string().optional()).min(1).optional(),
     });
+
+    console.log("Request body:", req.body.name);
 
     const { error } = schema.validate(req.body);
     if (error)
@@ -373,21 +375,15 @@ exports.updateProduct = async (req, res) => {
 
       console.log("New photos added:", newPhotos);
       await product.save();
-
-      await Product.findByIdAndUpdate(
-        productId,
-        {
-          name: name || product.name,
-          description: description || product.description,
-          price: price || product.price,
-          categoryId: categoryId || product.categoryId,
-          subcategoryId: subcategoryId || product.subcategoryId,
-        },
-        { new: true }
-      );
-
-      await product.save();
     }
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.categoryId = categoryId || product.categoryId;
+    product.subcategoryId = subcategoryId || product.subcategoryId;
+
+    await product.save();
+
     res.json({
       status: true,
       message: "Product updated successfully",
