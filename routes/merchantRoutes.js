@@ -50,7 +50,6 @@ router.post(
   uploadLocationMedia.fields([
     { name: "media", maxCount: 10 }, // Main media files
     { name: "thumbnails", maxCount: 10 }, // Optional thumbnail files
-    { name: "attachment", maxCount: 10 },
   ]),
   merchant.addLocationMedia,
 )
