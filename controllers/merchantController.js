@@ -1,5 +1,3 @@
-
-
 const Merchant = require("../models/merchant/Merchant");
 const Services = require("../models/merchant/Services");
 const Subservices = require("../models/merchant/Subservices");
@@ -1265,6 +1263,81 @@ exports.updateCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating coupon:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getNearbyRestaurantMerchants = async (req, res) => {
+  try {
+    const { lat, long, radius } = req.query;
+    if (!lat || !long) {
+      return res.status(400).json({
+        status: false,
+        message: "lat and long query parameters are required",
+      });
+    }
+    const searchRadius = radius ? parseFloat(radius) : 10; // default 10 km
+    const locations = await ServiceLocation.find({
+      lat: { $exists: true },
+      long: { $exists: true },
+      location: {
+        $nearSphere: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(long), parseFloat(lat)],
+          },
+          $maxDistance: searchRadius * 1000, // meters
+        },
+      },
+    }).catch(() => []); // fallback if geo index not present
+
+    // If geo index is not present, fallback to manual filter (Haversine)
+    let filteredLocations = locations;
+    if (!locations.length) {
+      // fallback: get all, then filter manually
+      const allLocations = await ServiceLocation.find({ lat: { $exists: true }, long: { $exists: true } });
+      function haversine(lat1, lon1, lat2, lon2) {
+        function toRad(x) { return x * Math.PI / 180; }
+        const R = 6371; // km
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+      filteredLocations = allLocations.filter(loc => {
+        if (typeof loc.lat !== 'number' || typeof loc.long !== 'number') return false;
+        return haversine(parseFloat(lat), parseFloat(long), loc.lat, loc.long) <= searchRadius;
+      });
+    }
+
+    // Get unique merchantIds from locations
+    const merchantIds = [...new Set(filteredLocations.map(loc => loc.merchantId.toString()))];
+    if (!merchantIds.length) {
+      return res.status(404).json({
+        status: false,
+        message: "No restaurant merchants found nearby",
+        data: [],
+      });
+    }
+
+    // Find merchants with those IDs and (optionally) filter for restaurant type
+    // If you have a way to identify restaurant merchants (e.g., serviceId/category), add filter here
+    const merchants = await Merchant.find({ _id: { $in: merchantIds } })
+      .select('-password -otp');
+
+    res.status(200).json({
+      status: true,
+      message: "Nearby restaurant merchants retrieved successfully",
+      data: merchants,
+    });
+  } catch (error) {
+    console.error("Error getting nearby restaurant merchants:", error);
     res.status(500).json({
       status: false,
       message: "Internal server error",

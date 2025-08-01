@@ -1,8 +1,6 @@
-
-// Get coupon by ID (expects /coupon/:id)
-// Get all coupons for the current merchant
-const express = require("express")
-const router = express.Router()
+const express = require('express');
+const router = express.Router();
+const merchantController = require('../controllers/merchantController');
 const merchant = require("../controllers/merchantController")
 const { protect } = require("../middleware/authMiddleware")
 const { uploadMerchantProfile, uploadLocationMedia } = require("../middleware/merchantMulter")
@@ -72,4 +70,5 @@ router.delete(
   protect,
   merchant.deleteLocationMediaById
 );
+router.get('/restaurants/nearby', merchantController.getNearbyRestaurantMerchants);
 module.exports = router
