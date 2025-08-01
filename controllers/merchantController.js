@@ -1081,10 +1081,25 @@ exports.getAllCoupons = async (req, res) => {
         data: [],
       });
     }
+    // Format validFrom and validTo as dd-mm-yyyy
+    function formatDateToDDMMYYYY(date) {
+      if (!date) return "";
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    const formattedCoupons = coupons.map(coupon => {
+      const obj = coupon.toObject();
+      obj.validFrom = formatDateToDDMMYYYY(obj.validFrom);
+      obj.validTo = formatDateToDDMMYYYY(obj.validTo);
+      return obj;
+    });
     res.status(200).json({
       status: true,
       message: "Coupons retrieved successfully",
-      data: coupons,
+      data: formattedCoupons,
     });
   } catch (error) {
     console.error("Error getting all coupons:", error);
