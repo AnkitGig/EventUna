@@ -1,6 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const merchantController = require('../controllers/merchantController');
+const express = require("express")
+const router = express.Router()
+const merchantController = require("../controllers/merchantController")
 const merchant = require("../controllers/merchantController")
 const { protect } = require("../middleware/authMiddleware")
 const { uploadMerchantProfile, uploadLocationMedia } = require("../middleware/merchantMulter")
@@ -29,14 +29,9 @@ router.put(
 )
 
 router.post("/add-location", protect, merchant.addServiceLocation)
-router.post(
-  "/update-location",
-  protect,
-  merchant.updateServiceLocation,
-)
+router.post("/update-location", protect, merchant.updateServiceLocation)
 router.get("/location", protect, merchant.getServiceLocation)
 router.get("/locations", protect, merchant.getAllServiceLocations)
-
 
 // Coupon CRUD routes
 
@@ -46,29 +41,23 @@ router.get("/locations", protect, merchant.getAllServiceLocations)
 router.post("/add-coupon", protect, merchant.addCoupon)
 router.post("/update-coupon", protect, merchant.updateCoupon)
 router.post("/delete-coupon", protect, merchant.deleteCoupon)
-router.get("/all-coupons", protect, merchant.getAllCoupons);
-router.get("/coupon", protect, merchant.getCouponById);
+router.get("/all-coupons", protect, merchant.getAllCoupons)
+router.get("/coupon", protect, merchant.getCouponById)
 // Add more images/videos to a service location by locationId
 router.post(
   "/add-location-media",
   protect,
-  uploadLocationMedia.array("media", 10), // field name: media, max 10 files
-  merchant.addLocationMedia
-);
+  uploadLocationMedia.fields([
+    { name: "media", maxCount: 10 }, // Main media files
+    { name: "thumbnails", maxCount: 10 }, // Optional thumbnail files
+  ]),
+  merchant.addLocationMedia,
+)
 
 // Update a specific media item by its id in a service location
-router.put(
-  "/update-location-media",
-  protect,
-  uploadLocationMedia.single("media"),
-  merchant.updateLocationMediaById
-);
+router.put("/update-location-media", protect, uploadLocationMedia.single("media"), merchant.updateLocationMediaById)
 
 // Delete a specific media item by its id in a service location
-router.delete(
-  "/delete-location-media",
-  protect,
-  merchant.deleteLocationMediaById
-);
-router.get('/restaurants/nearby', merchantController.getNearbyRestaurantMerchants);
+router.delete("/delete-location-media", protect, merchant.deleteLocationMediaById)
+router.get("/restaurants/nearby", merchantController.getNearbyRestaurantMerchants)
 module.exports = router
