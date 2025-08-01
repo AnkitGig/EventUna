@@ -73,7 +73,7 @@ const uploadMerchantProfile = multer({
 const uploadLocationMedia = multer({
   storage: locationStorage,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit for videos
+    fileSize: 500* 1024 * 1024, // 50MB limit for videos
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|mp4|mov/
@@ -103,7 +103,7 @@ const productPhotoStorage = multer.diskStorage({
 const uploadProductPhoto = multer({
   storage: productPhotoStorage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 100* 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png/;
