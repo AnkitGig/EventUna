@@ -732,37 +732,30 @@ exports.addLocationMedia = async (req, res) => {
   try {
     const merchantId = req.user.id;
     const { locationId } = req.body;
-    // Accepts: req.files (array of files), req.body.photoDescription (string or array)
     if (!locationId) {
       return res.status(400).json({ status: false, message: "locationId is required" });
     }
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ status: false, message: "No files uploaded" });
     }
-    // Find location and check ownership
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" });
     }
-    // Support single or multiple descriptions
     let descriptions = req.body.photoDescription || "";
     if (Array.isArray(descriptions)) {
-      // ok
     } else if (typeof descriptions === "string") {
       descriptions = [descriptions];
     } else {
       descriptions = [];
     }
-    // Build new media objects
     const newMedia = req.files.map((file, idx) => ({
       file: file.filename,
       mediaType: file.mimetype.startsWith("video/") ? "video" : "photo",
       description: descriptions[idx] || "",
     }));
-    // Append to locationPhotoVideoList
     location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia);
     await location.save();
-    // Add full URLs for response
     const locationObj = location.toObject();
     locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
       ...media,
@@ -787,22 +780,18 @@ exports.updateLocationMediaById = async (req, res) => {
     if (!locationId || !mediaId) {
       return res.status(400).json({ status: false, message: "locationId and mediaId are required" });
     }
-    // Find location and check ownership
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" });
     }
-    // Find media by id (mediaId is the _id of the subdocument or index)
     const mediaItem = location.locationPhotoVideoList.id
       ? location.locationPhotoVideoList.id(mediaId)
       : location.locationPhotoVideoList.find((m) => m._id?.toString() === mediaId || m.id === mediaId);
     if (!mediaItem) {
       return res.status(404).json({ status: false, message: "Media item not found" });
     }
-    // Update description (and optionally file if new file is uploaded)
     if (description !== undefined) mediaItem.description = description;
     if (req.file) {
-      // Delete old file from disk if exists
       const fs = require('fs');
       const path = require('path');
       if (mediaItem.file) {
@@ -813,7 +802,6 @@ exports.updateLocationMediaById = async (req, res) => {
       mediaItem.mediaType = req.file.mimetype.startsWith("video/") ? "video" : "photo";
     }
     await location.save();
-    // Add full URLs for response
     const locationObj = location.toObject();
     locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
       ...media,
@@ -830,7 +818,6 @@ exports.updateLocationMediaById = async (req, res) => {
   }
 };
 
-// Delete a specific media item by its id in a service location
 exports.deleteLocationMediaById = async (req, res) => {
   try {
     const merchantId = req.user.id;
@@ -838,12 +825,10 @@ exports.deleteLocationMediaById = async (req, res) => {
     if (!locationId || !mediaId) {
       return res.status(400).json({ status: false, message: "locationId and mediaId are required" });
     }
-    // Find location and check ownership
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId });
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" });
     }
-    // Remove media by id and delete file from disk
     const fs = require('fs');
     const path = require('path');
     const mediaToDelete = location.locationPhotoVideoList.find((media) =>
@@ -860,7 +845,6 @@ exports.deleteLocationMediaById = async (req, res) => {
       (media._id?.toString() !== mediaId && media.id !== mediaId)
     );
     await location.save();
-    // Add full URLs for response
     const locationObj = location.toObject();
     locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
       ...media,
@@ -876,12 +860,11 @@ exports.deleteLocationMediaById = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
-// Get Merchant Profile - FIXED VERSION
+
+
 exports.getMerchantProfile = async (req, res) => {
   try {
     const merchantId = req.user.id;
-
-    // Fetch merchant and exclude sensitive fields
     const merchant = await Merchant.findById(merchantId).select(
       "-password -otp"
     );
@@ -892,11 +875,8 @@ exports.getMerchantProfile = async (req, res) => {
         message: "Merchant not found",
       });
     }
-
     const profileData = merchant.toObject();
-
     try {
-      // Populate serviceId
       if (profileData.serviceId) {
         const service = await Services.findById(profileData.serviceId).select(
           "servicesName"
@@ -906,8 +886,6 @@ exports.getMerchantProfile = async (req, res) => {
           servicesName: "Service not found",
         };
       }
-
-      // Populate serviceSubcategoryIds
       if (
         Array.isArray(profileData.serviceSubcategoryIds) &&
         profileData.serviceSubcategoryIds.length > 0
@@ -915,8 +893,6 @@ exports.getMerchantProfile = async (req, res) => {
         const subservices = await Subservices.find({
           _id: { $in: profileData.serviceSubcategoryIds },
         }).select("_id subServicesName");
-
-        // Map to ensure all IDs are present, even if not found
         profileData.serviceSubcategoryIds =
           profileData.serviceSubcategoryIds.map((id) => {
             const found = subservices.find(
@@ -927,8 +903,6 @@ exports.getMerchantProfile = async (req, res) => {
               : { _id: id, subServicesName: "Subservice not found" };
           });
       }
-
-      // Populate serviceLocationIds
       if (
         Array.isArray(profileData.serviceLocationIds) &&
         profileData.serviceLocationIds.length > 0
@@ -936,7 +910,6 @@ exports.getMerchantProfile = async (req, res) => {
         const locations = await ServiceLocation.find({
           _id: { $in: profileData.serviceLocationIds },
         });
-
         profileData.serviceLocationIds =
           locations.length > 0
             ? locations
@@ -946,8 +919,6 @@ exports.getMerchantProfile = async (req, res) => {
                 locationPhotoVideoList: [],
               }));
       }
-
-      // Populate couponIds
       if (
         Array.isArray(profileData.couponIds) &&
         profileData.couponIds.length > 0
@@ -967,19 +938,14 @@ exports.getMerchantProfile = async (req, res) => {
     } catch (populateError) {
       console.error("Error during manual populate:", populateError);
     }
-
-    // Add full URLs for document images
     const docBase = `${process.env.BASE_URL}/merchant/documents`;
     const bannerBase = `${process.env.BASE_URL}/merchant/banners`;
-
     if (profileData.businessRegistrationImage) {
       profileData.businessRegistrationImage = `${docBase}/${profileData.businessRegistrationImage}`;
     }
-
     if (profileData.vatRegistrationImage) {
       profileData.vatRegistrationImage = `${docBase}/${profileData.vatRegistrationImage}`;
     }
-
     if (profileData.otherImage) {
       profileData.otherImage = `${docBase}/${profileData.otherImage}`;
     }
@@ -987,8 +953,6 @@ exports.getMerchantProfile = async (req, res) => {
     if (profileData.bannerImage) {
       profileData.bannerImage = `${bannerBase}/${profileData.bannerImage}`;
     }
-
-    // Add media URLs to service locations
     if (Array.isArray(profileData.serviceLocationIds)) {
       profileData.serviceLocationIds = profileData.serviceLocationIds.map(
         (location) => {
@@ -1022,27 +986,22 @@ exports.getMerchantProfile = async (req, res) => {
 exports.addCoupon = async (req, res) => {
   try {
     const { couponName, discount, validFrom, validTo, description } = req.body;
-
     const schema = joi.object({
       couponName: joi.string().required(),
       discount: joi.number().required(),
-      validFrom: joi.string().required(), // Expecting dd-mm-yyyy
-      validTo: joi.string().required(), // Expecting dd-mm-yyyy
+      validFrom: joi.string().required(),
+      validTo: joi.string().required(),
       description: joi.string().required(),
     });
-
     const { error } = schema.validate(req.body);
     if (error)
       return res
         .status(400)
         .json({ status: false, message: error.details[0].message });
-
-    // Parse dd-mm-yyyy to Date
     function parseDDMMYYYY(str) {
       const [dd, mm, yyyy] = str.split("-");
       return new Date(`${yyyy}-${mm}-${dd}`);
     }
-
     const coupon = new Coupon({
       couponName,
       discount,
@@ -1064,11 +1023,10 @@ exports.addCoupon = async (req, res) => {
   }
 };
 
-// Get all coupons for the current merchant
+
 exports.getAllCoupons = async (req, res) => {
   try {
     const merchantId = req.user.id;
-    // Find all coupons where userId matches the merchant's id
     const coupons = await Coupon.find({ userId: merchantId }).sort({
       createdAt: -1,
     });
@@ -1079,7 +1037,6 @@ exports.getAllCoupons = async (req, res) => {
         data: [],
       });
     }
-    // Format validFrom and validTo as dd-mm-yyyy
     function formatDateToDDMMYYYY(date) {
       if (!date) return "";
       const d = new Date(date);
@@ -1108,7 +1065,7 @@ exports.getAllCoupons = async (req, res) => {
   }
 };
 
-// Delete a coupon by couponId (only by the owner merchant)
+
 exports.deleteCoupon = async (req, res) => {
   try {
     const merchantId = req.user.id;
@@ -1120,8 +1077,6 @@ exports.deleteCoupon = async (req, res) => {
         message: "couponId is required",
       });
     }
-
-    // Find the coupon and ensure it belongs to the merchant
     const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
     if (!coupon) {
       return res.status(404).json({
@@ -1129,9 +1084,7 @@ exports.deleteCoupon = async (req, res) => {
         message: "Coupon not found or not authorized",
       });
     }
-
     await Coupon.deleteOne({ _id: couponId });
-
     res.status(200).json({
       status: true,
       message: "Coupon deleted successfully",
@@ -1146,7 +1099,6 @@ exports.deleteCoupon = async (req, res) => {
 };
 
 
-// Get a coupon by its ID for the current merchant
 exports.getCouponById = async (req, res) => {
   try {
     const merchantId = req.user.id;
@@ -1158,8 +1110,6 @@ exports.getCouponById = async (req, res) => {
         message: "couponId is required in query",
       });
     }
-
-    // Find the coupon and ensure it belongs to the merchant
     const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
     if (!coupon) {
       return res.status(404).json({
@@ -1167,8 +1117,6 @@ exports.getCouponById = async (req, res) => {
         message: "Coupon not found or not authorized",
       });
     }
-
-    // Format validFrom and validTo as dd-mm-yyyy
     function formatDateToDDMMYYYY(date) {
       if (!date) return "";
       const d = new Date(date);
@@ -1180,7 +1128,6 @@ exports.getCouponById = async (req, res) => {
     const couponObj = coupon.toObject();
     couponObj.validFrom = formatDateToDDMMYYYY(couponObj.validFrom);
     couponObj.validTo = formatDateToDDMMYYYY(couponObj.validTo);
-
     res.status(200).json({
       status: true,
       message: "Coupon retrieved successfully",
@@ -1208,14 +1155,12 @@ exports.updateCoupon = async (req, res) => {
         message: "couponId is required",
       });
     }
-
-    // Validate input (allow partial update)
     const schema = require("joi").object({
       couponId: require("joi").string().required(),
       couponName: require("joi").string().optional(),
       discount: require("joi").number().optional(),
-      validFrom: require("joi").string().optional(), // Expecting dd-mm-yyyy
-      validTo: require("joi").string().optional(), // Expecting dd-mm-yyyy
+      validFrom: require("joi").string().optional(), 
+      validTo: require("joi").string().optional(),
       description: require("joi").string().optional(),
     });
     const { error } = schema.validate(req.body);
@@ -1225,8 +1170,6 @@ exports.updateCoupon = async (req, res) => {
         message: error.details[0].message,
       });
     }
-
-    // Find the coupon and ensure it belongs to the merchant
     const coupon = await Coupon.findOne({ _id: couponId, userId: merchantId });
     if (!coupon) {
       return res.status(404).json({
@@ -1234,13 +1177,10 @@ exports.updateCoupon = async (req, res) => {
         message: "Coupon not found or not authorized",
       });
     }
-
-    // Prepare update data
     const updateData = {};
     if (couponName !== undefined) updateData.couponName = couponName;
     if (discount !== undefined) updateData.discount = discount;
     if (validFrom !== undefined) {
-      // Parse dd-mm-yyyy to Date
       const [dd, mm, yyyy] = validFrom.split("-");
       updateData.validFrom = new Date(`${yyyy}-${mm}-${dd}`);
     }
@@ -1249,13 +1189,11 @@ exports.updateCoupon = async (req, res) => {
       updateData.validTo = new Date(`${yyyy}-${mm}-${dd}`);
     }
     if (description !== undefined) updateData.description = description;
-
     const updatedCoupon = await Coupon.findByIdAndUpdate(
       couponId,
       { $set: updateData },
       { new: true }
     );
-
     res.status(200).json({
       status: true,
       message: "Coupon updated successfully",
@@ -1289,12 +1227,10 @@ exports.getNearbyRestaurantMerchants = async (req, res) => {
             type: "Point",
             coordinates: [parseFloat(long), parseFloat(lat)],
           },
-          $maxDistance: searchRadius * 1000, // meters
+          $maxDistance: searchRadius * 1000, 
         },
       },
-    }).catch(() => []); // fallback if geo index not present
-
-    // If geo index is not present, fallback to manual filter (Haversine)
+    }).catch(() => []); 
     let filteredLocations = locations;
     if (!locations.length) {
       // fallback: get all, then filter manually
@@ -1326,8 +1262,6 @@ exports.getNearbyRestaurantMerchants = async (req, res) => {
       });
     }
 
-    // Find merchants with those IDs and (optionally) filter for restaurant type
-    // If you have a way to identify restaurant merchants (e.g., serviceId/category), add filter here
     const merchants = await Merchant.find({ _id: { $in: merchantIds } })
       .select('-password -otp');
 
