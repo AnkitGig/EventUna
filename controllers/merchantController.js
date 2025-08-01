@@ -638,6 +638,7 @@ exports.getAllServiceLocations = async (req, res) => {
       locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
         ...media,
         url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+        thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
       }))
       return locationObj
     })
@@ -660,36 +661,55 @@ exports.getAllServiceLocations = async (req, res) => {
 exports.addLocationMedia = async (req, res) => {
   try {
     const merchantId = req.user.id
-    const { locationId } = req.body
-    if (!locationId) {
-      return res.status(400).json({ status: false, message: "locationId is required" })
+    const { locationId, photoDescription, types } = req.body // Now expecting single strings
+
+    // Joi schema for validation
+    const schema = joi.object({
+      locationId: joi.string().required(),
+      photoDescription: joi.string().allow("").optional(), // Changed to string
+      types: joi.string().valid("photo", "video").required(), // Changed to string
+    })
+
+    const { error } = schema.validate({
+      locationId,
+      photoDescription,
+      types,
+    })
+
+    if (error) {
+      return res.status(400).json({ status: false, message: error.details[0].message })
     }
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ status: false, message: "No files uploaded" })
+
+    const mediaFiles = req.files.media
+    const thumbnailFiles = req.files.thumbnails || []
+
+    if (!mediaFiles || mediaFiles.length === 0) {
+      return res.status(400).json({ status: false, message: "No media files uploaded" })
     }
+
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId })
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" })
     }
-    let descriptions = req.body.photoDescription || ""
-    if (Array.isArray(descriptions)) {
-    } else if (typeof descriptions === "string") {
-      descriptions = [descriptions]
-    } else {
-      descriptions = []
-    }
-    const newMedia = req.files.map((file, idx) => ({
+
+    // Apply the single type and description to all uploaded files
+    const newMedia = mediaFiles.map((file, idx) => ({
       file: file.filename,
-      mediaType: file.mimetype.startsWith("video/") ? "video" : "photo",
-      description: descriptions[idx] || "",
+      mediaType: types, // Use the single provided type
+      description: photoDescription || "", // Use the single provided description
+      thumbnail: thumbnailFiles[idx] ? thumbnailFiles[idx].filename : undefined, // Still map thumbnails by index
     }))
+
     location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia)
     await location.save()
+
     const locationObj = location.toObject()
     locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
       ...media,
       url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+      thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
     }))
+
     res.status(200).json({
       status: true,
       message: "Media uploaded successfully",
@@ -1182,89 +1202,51 @@ exports.getNearbyRestaurantMerchants = async (req, res) => {
   }
 }
 
-// Helper function to parse JSON array from form-data
-function parseJsonArray(fieldName, req) {
-  const rawValue = req.body[fieldName]
-  if (!rawValue) return []
-
-  try {
-    return JSON.parse(rawValue)
-  } catch (e) {
-    console.warn(`Failed to parse ${fieldName} as JSON, attempting comma split:`, e)
-    return rawValue.split(",").map((item) => item.trim())
-  }
-}
-
-exports.addLocationMedia = async (req, res) => {
+// New: Get a specific media item by its ID
+exports.getLocationMediaById = async (req, res) => {
   try {
     const merchantId = req.user.id
-    const { locationId } = req.body
+    const { locationId, mediaId } = req.query
 
-    // Parse arrays from form-data
-    const descriptions = req.body.photoDescription ? parseJsonArray("photoDescription", req) : []
-    const types = req.body.types ? parseJsonArray("types", req) : []
-
-    // Joi schema for validation
+    // Validate input
     const schema = joi.object({
       locationId: joi.string().required(),
-      photoDescription: joi.array().items(joi.string().allow("")).optional(),
-      types: joi.array().items(joi.string().valid("photo", "video").required()).min(1).required(),
+      mediaId: joi.string().required(),
     })
-
-    const { error } = schema.validate({
-      locationId,
-      photoDescription: descriptions,
-      types,
-    })
-
+    const { error } = schema.validate({ locationId, mediaId })
     if (error) {
       return res.status(400).json({ status: false, message: error.details[0].message })
     }
 
-    const mediaFiles = req.files.media
-    const thumbnailFiles = req.files.thumbnails || []
-
-    if (!mediaFiles || mediaFiles.length === 0) {
-      return res.status(400).json({ status: false, message: "No media files uploaded" })
-    }
-    if (mediaFiles.length !== types.length) {
-      return res.status(400).json({ status: false, message: "Number of media files must match number of types" })
-    }
-    if (descriptions.length > 0 && mediaFiles.length !== descriptions.length) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Number of media files must match number of descriptions if provided" })
-    }
-
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId })
     if (!location) {
-      return res.status(404).json({ status: false, message: "Service location not found" })
+      return res.status(404).json({ status: false, message: "Service location not found or unauthorized" })
     }
 
-    const newMedia = mediaFiles.map((file, idx) => ({
-      file: file.filename,
-      mediaType: types[idx], // Use the explicitly provided type
-      description: descriptions[idx] || "",
-      thumbnail: thumbnailFiles[idx] ? thumbnailFiles[idx].filename : undefined, // Optional thumbnail
-    }))
+    const mediaItem = location.locationPhotoVideoList.find(
+      (media) => media._id?.toString() === mediaId || media.id === mediaId,
+    )
 
-    location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia)
-    await location.save()
+    if (!mediaItem) {
+      return res.status(404).json({ status: false, message: "Media item not found in this location" })
+    }
 
-    const locationObj = location.toObject()
-    locationObj.locationPhotoVideoList = locationObj.locationPhotoVideoList.map((media) => ({
-      ...media,
-      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
-      thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
-    }))
+    // Construct full URLs
+    const mediaItemWithUrls = {
+      ...mediaItem.toObject(),
+      url: mediaItem.file ? `${process.env.BASE_URL}/merchant/locations/${mediaItem.file}` : undefined,
+      thumbnailUrl: mediaItem.thumbnail
+        ? `${process.env.BASE_URL}/merchant/locations/${mediaItem.thumbnail}`
+        : undefined,
+    }
 
     res.status(200).json({
       status: true,
-      message: "Media uploaded successfully",
-      data: locationObj,
+      message: "Media item retrieved successfully",
+      data: mediaItemWithUrls,
     })
   } catch (error) {
-    console.error("Error uploading location media:", error)
+    console.error("Error getting location media by ID:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
   }
 }
