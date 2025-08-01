@@ -1170,10 +1170,23 @@ exports.getCouponById = async (req, res) => {
       });
     }
 
+    // Format validFrom and validTo as dd-mm-yyyy
+    function formatDateToDDMMYYYY(date) {
+      if (!date) return "";
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    const couponObj = coupon.toObject();
+    couponObj.validFrom = formatDateToDDMMYYYY(couponObj.validFrom);
+    couponObj.validTo = formatDateToDDMMYYYY(couponObj.validTo);
+
     res.status(200).json({
       status: true,
       message: "Coupon retrieved successfully",
-      data: coupon,
+      data: couponObj,
     });
   } catch (error) {
     console.error("Error getting coupon by id:", error);
