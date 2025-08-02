@@ -78,7 +78,7 @@ const uploadLocationMedia = multer({
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|mp4|mov/
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-    const mimetype = allowedTypes.test(file.mimetype)
+    const mimetype = allowedTypes.test(file.mimetype.toLowerCase())
 
     if (mimetype && extname) {
       return cb(null, true)
