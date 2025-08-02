@@ -1269,12 +1269,18 @@ exports.getLocationMedia = async (req, res) => {
       return res.status(404).json({ status: false, message: "Service location not found" })
     }
 
-    // Map media with URLs
-    const mediaList = (location.locationPhotoVideoList || []).map((media) => ({
-      ...(media.toObject ? media.toObject() : media),
-      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
-      thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
-    }))
+
+    // Map media with URLs, ensure thumbnailUrl is blank if not present, and remove 'thumbnail' from response
+    const mediaList = (location.locationPhotoVideoList || []).map((media) => {
+      const obj = media.toObject ? media.toObject() : { ...media };
+      // Remove the 'thumbnail' property if it exists
+      if (obj.thumbnail !== undefined) delete obj.thumbnail;
+      return {
+        ...obj,
+        url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+        thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : "",
+      };
+    });
 
     res.status(200).json({
       status: true,
