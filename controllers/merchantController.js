@@ -661,25 +661,9 @@ exports.getAllServiceLocations = async (req, res) => {
 exports.addLocationMedia = async (req, res) => {
   try {
     const merchantId = req.user.id
-    const { locationId, photoDescription, types } = req.body // Now expecting single strings
+    const { locationId, photoDescription, types } = req.body
 
-    // Joi schema for validation
-    const schema = joi.object({
-      locationId: joi.string().required(),
-      photoDescription: joi.string().allow("").optional(), // Changed to string
-      types: joi.string().valid("photo", "video").required(), // Changed to string
-    })
-
-    const { error } = schema.validate({
-      locationId,
-      photoDescription,
-      types,
-    })
-
-    if (error) {
-      return res.status(400).json({ status: false, message: error.details[0].message })
-    }
-
+    // Only require media files and locationId to proceed
     const mediaFiles = req.files.media
     const thumbnailFiles = req.files.thumbnails || []
 
@@ -687,17 +671,22 @@ exports.addLocationMedia = async (req, res) => {
       return res.status(400).json({ status: false, message: "No media files uploaded" })
     }
 
+    // If locationId is missing, cannot proceed
+    if (!locationId) {
+      return res.status(400).json({ status: false, message: "locationId is required" })
+    }
+
     const location = await ServiceLocation.findOne({ _id: locationId, merchantId })
     if (!location) {
       return res.status(404).json({ status: false, message: "Service location not found" })
     }
 
-    // Apply the single type and description to all uploaded files
+    // Use provided type/description or default to empty string
     const newMedia = mediaFiles.map((file, idx) => ({
       file: file.filename,
-      mediaType: types, // Use the single provided type
-      description: photoDescription || "", // Use the single provided description
-      thumbnail: thumbnailFiles[idx] ? thumbnailFiles[idx].filename : undefined, // Still map thumbnails by index
+      mediaType: types || "", // Accept empty string if not provided
+      description: photoDescription || "", // Accept empty string if not provided
+      thumbnail: thumbnailFiles[idx] ? thumbnailFiles[idx].filename : undefined,
     }))
 
     location.locationPhotoVideoList = location.locationPhotoVideoList.concat(newMedia)
