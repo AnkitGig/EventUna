@@ -61,4 +61,9 @@ router.put("/update-location-media", protect, uploadLocationMedia.single("media"
 // Delete a specific media item by its id in a service location
 router.delete("/delete-location-media", protect, merchant.deleteLocationMediaById)
 router.get("/restaurants/nearby", merchantController.getNearbyRestaurantMerchants)
+
+// New routes for merchant status changes
+router.post("/request-deactivation", protect, merchant.requestDeactivation)
+router.post("/request-reactivation", protect, merchant.requestReactivation)
+
 module.exports = router

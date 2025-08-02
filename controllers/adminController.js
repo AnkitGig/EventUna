@@ -8,7 +8,6 @@ const Preferences = require(`../models/event/EventPreferences`)
 const RestaurantCategory = require(`../models/merchant/RestaurantCategory`)
 const joi = require("joi")
 
-
 exports.addServices = async (req, res) => {
   try {
     const { servicesName } = req.body
@@ -38,7 +37,7 @@ exports.merchantAccountStatus = async (req, res) => {
     const { id, flag } = req.body
     const schema = joi.object({
       id: joi.string().required(),
-      flag: joi.string().required(),
+      flag: joi.boolean().required(), // Ensure flag is boolean
     })
 
     const { error } = schema.validate(req.body)
@@ -290,6 +289,172 @@ exports.getRestaurantCategories = async (req, res) => {
     })
   } catch (error) {
     console.error("Error retrieving restaurant categories:", error)
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+// New function to update merchant application approval status
+exports.updateMerchantApprovalStatus = async (req, res) => {
+  try {
+    const { merchantId, status, reason } = req.body // status: 'approved' or 'rejected'
+    const schema = joi.object({
+      merchantId: joi.string().required(),
+      status: joi.string().valid("approved", "rejected").required(),
+      reason: joi.string().when("status", {
+        is: "rejected",
+        then: joi.string().required(),
+        otherwise: joi.string().allow(null, ""),
+      }),
+    })
+
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
+    const merchant = await Merchant.findById(merchantId)
+    if (!merchant) {
+      return res.status(404).json({ message: "Merchant not found" })
+    }
+
+    const updateFields = {
+      applicationStatus: status,
+      rejectionReason: status === "rejected" ? reason : null,
+    }
+    const historyEntry = {
+      status: status === "approved" ? "Approved" : "Rejected",
+      description:
+        status === "approved" ? "Application approved by admin." : `Application rejected by admin. Reason: ${reason}`,
+      date: new Date(),
+    }
+
+    if (status === "approved") {
+      updateFields.isActive = true // Activate merchant if approved
+    } else {
+      updateFields.isActive = false // Deactivate merchant if rejected
+    }
+
+    merchant.set(updateFields)
+    merchant.applicationHistory.push(historyEntry)
+    await merchant.save()
+
+    res.status(200).json({ message: `Merchant application ${status} successfully`, merchant })
+  } catch (error) {
+    console.error("Error updating merchant approval status:", error)
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+// New function to handle merchant deactivation requests
+exports.handleDeactivationRequest = async (req, res) => {
+  try {
+    const { merchantId, action, reason } = req.body // action: 'approve' or 'reject'
+    const schema = joi.object({
+      merchantId: joi.string().required(),
+      action: joi.string().valid("approve", "reject").required(),
+      reason: joi.string().when("action", {
+        is: "reject",
+        then: joi.string().required(),
+        otherwise: joi.string().allow(null, ""),
+      }),
+    })
+
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
+    const merchant = await Merchant.findById(merchantId)
+    if (!merchant) {
+      return res.status(404).json({ message: "Merchant not found" })
+    }
+
+    if (merchant.deactivationRequest.status !== "pending") {
+      return res.status(400).json({ message: "No pending deactivation request for this merchant." })
+    }
+
+    let historyStatus, historyDescription
+    if (action === "approve") {
+      merchant.isActive = false
+      merchant.deactivationRequest.status = "approved"
+      merchant.deactivationRequest.handledAt = new Date()
+      historyStatus = "Deactivated"
+      historyDescription = `Deactivation request approved by admin. Reason: ${merchant.deactivationRequest.reason || "No reason provided by merchant."}`
+    } else {
+      merchant.deactivationRequest.status = "rejected"
+      merchant.deactivationRequest.reason = reason // Admin's reason for rejection
+      merchant.deactivationRequest.handledAt = new Date()
+      historyStatus = "Deactivation Request Rejected"
+      historyDescription = `Deactivation request rejected by admin. Reason: ${reason}`
+    }
+
+    merchant.applicationHistory.push({
+      status: historyStatus,
+      description: historyDescription,
+      date: new Date(),
+    })
+    await merchant.save()
+
+    res.status(200).json({ message: `Deactivation request ${action}d successfully.`, merchant })
+  } catch (error) {
+    console.error("Error handling deactivation request:", error)
+    res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+// New function to handle merchant reactivation requests
+exports.handleReactivationRequest = async (req, res) => {
+  try {
+    const { merchantId, action, reason } = req.body // action: 'approve' or 'reject'
+    const schema = joi.object({
+      merchantId: joi.string().required(),
+      action: joi.string().valid("approve", "reject").required(),
+      reason: joi.string().when("action", {
+        is: "reject",
+        then: joi.string().required(),
+        otherwise: joi.string().allow(null, ""),
+      }),
+    })
+
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
+    const merchant = await Merchant.findById(merchantId)
+    if (!merchant) {
+      return res.status(404).json({ message: "Merchant not found" })
+    }
+
+    if (merchant.reactivationRequest.status !== "pending") {
+      return res.status(400).json({ message: "No pending reactivation request for this merchant." })
+    }
+
+    let historyStatus, historyDescription
+    if (action === "approve") {
+      merchant.isActive = true
+      merchant.reactivationRequest.status = "approved"
+      merchant.reactivationRequest.handledAt = new Date()
+      historyStatus = "Activated"
+      historyDescription = `Reactivation request approved by admin. Reason: ${merchant.reactivationRequest.reason || "No reason provided by merchant."}`
+    } else {
+      merchant.reactivationRequest.status = "rejected"
+      merchant.reactivationRequest.reason = reason // Admin's reason for rejection
+      merchant.reactivationRequest.handledAt = new Date()
+      historyStatus = "Reactivation Request Rejected"
+      historyDescription = `Reactivation request rejected by admin. Reason: ${reason}`
+    }
+
+    merchant.applicationHistory.push({
+      status: historyStatus,
+      description: historyDescription,
+      date: new Date(),
+    })
+    await merchant.save()
+
+    res.status(200).json({ message: `Reactivation request ${action}d successfully.`, merchant })
+  } catch (error) {
+    console.error("Error handling reactivation request:", error)
     res.status(500).json({ message: "Internal server error" })
   }
 }

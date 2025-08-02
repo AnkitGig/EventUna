@@ -1,4 +1,3 @@
-
 const Merchant = require("../models/merchant/Merchant")
 const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
@@ -72,6 +71,8 @@ exports.signup = async (req, res) => {
       serviceId,
       register_id: register_id || null,
       ios_register_id: ios_register_id || null,
+      applicationStatus: "pending", // Initialize application status
+      applicationHistory: [{ status: "Join App Request", date: new Date(), description: "Application submitted." }], // Initial history entry
     })
 
     await user.save()
@@ -182,6 +183,7 @@ exports.login = async (req, res) => {
       userId: user._id,
       role: user.role,
       isActive: user.isActive,
+      applicationStatus: user.applicationStatus, // Include application status
       register_id: user.register_id,
       ios_register_id: user.ios_register_id,
       serviceId: user.serviceId,
@@ -280,6 +282,11 @@ exports.updateServiceProfile = async (req, res) => {
     console.log("Request body:", req.body)
     console.log("Request files:", req.files)
 
+    let merchant = await Merchant.findById(merchantId) // Fetch the merchant
+    if (!merchant) {
+      return res.status(404).json({ status: false, message: "Merchant not found" })
+    }
+
     // Parse boolean values
     if (req.body.onlineReservation !== undefined) {
       req.body.onlineReservation = req.body.onlineReservation === "true" || req.body.onlineReservation === true
@@ -306,15 +313,6 @@ exports.updateServiceProfile = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: error.details[0].message,
-      })
-    }
-
-    // Get current merchant data to handle old file deletion
-    const currentMerchant = await Merchant.findById(merchantId)
-    if (!currentMerchant) {
-      return res.status(404).json({
-        status: false,
-        message: "Merchant not found",
       })
     }
 
@@ -356,47 +354,53 @@ exports.updateServiceProfile = async (req, res) => {
     // Handle file uploads and delete old files
     if (req.files) {
       if (req.files.businessRegistrationImage) {
-        if (currentMerchant.businessRegistrationImage) {
-          deleteOldImages("merchant/documents", currentMerchant.businessRegistrationImage)
+        if (merchant.businessRegistrationImage) {
+          deleteOldImages("merchant/documents", merchant.businessRegistrationImage)
         }
         updateData.businessRegistrationImage = req.files.businessRegistrationImage[0].filename
       }
       if (req.files.vatRegistrationImage) {
-        if (currentMerchant.vatRegistrationImage) {
-          deleteOldImages("merchant/documents", currentMerchant.vatRegistrationImage)
+        if (merchant.vatRegistrationImage) {
+          deleteOldImages("merchant/documents", merchant.vatRegistrationImage)
         }
         updateData.vatRegistrationImage = req.files.vatRegistrationImage[0].filename
       }
       if (req.files.otherImage) {
-        if (currentMerchant.otherImage) {
-          deleteOldImages("merchant/documents", currentMerchant.otherImage)
+        if (merchant.otherImage) {
+          deleteOldImages("merchant/documents", merchant.otherImage)
         }
         updateData.otherImage = req.files.otherImage[0].filename
       }
       if (req.files.bannerImage) {
-        if (currentMerchant.bannerImage) {
-          deleteOldImages("merchant/banners", currentMerchant.bannerImage)
+        if (merchant.bannerImage) {
+          deleteOldImages("merchant/banners", merchant.bannerImage)
         }
         updateData.bannerImage = req.files.bannerImage[0].filename
       }
     }
 
-    console.log("Final update data:", updateData)
+    // Handle application status change on resubmit
+    if (merchant.applicationStatus === "rejected") {
+      updateData.applicationStatus = "pending" // Reset status to pending on resubmit
+      merchant.applicationHistory.push({
+        status: "Application Resubmitted",
+        date: new Date(),
+        description: "Merchant resubmitted profile after rejection.",
+      })
+    }
 
-    const merchant = await Merchant.findByIdAndUpdate(merchantId, updateData, {
-      new: true,
-    })
+    // Apply updates from updateData to the merchant object
+    Object.assign(merchant, updateData)
+
+    // Save the updated merchant document
+    await merchant.save()
+
+    // Re-populate for response
+    merchant = await Merchant.findById(merchantId)
       .populate("serviceId", "servicesName")
       .populate("serviceSubcategoryIds", "subServicesName")
       .populate("serviceLocationIds")
       .populate("couponIds")
-
-    if (!merchant) {
-      return res.status(404).json({
-        status: false,
-        message: "Failed to update merchant profile",
-      })
-    }
 
     console.log("Updated merchant:", merchant)
 
@@ -892,6 +896,14 @@ exports.getMerchantProfile = async (req, res) => {
       })
     }
 
+    // Format application history dates
+    if (profileData.applicationHistory && Array.isArray(profileData.applicationHistory)) {
+      profileData.applicationHistory = profileData.applicationHistory.map((entry) => ({
+        ...entry,
+        date: entry.date.toISOString().split("T")[0], // Format to YYYY-MM-DD
+      }))
+    }
+
     res.status(200).json({
       status: true,
       message: "Merchant profile retrieved successfully",
@@ -1259,7 +1271,7 @@ exports.getLocationMedia = async (req, res) => {
 
     // Map media with URLs
     const mediaList = (location.locationPhotoVideoList || []).map((media) => ({
-      ...media.toObject ? media.toObject() : media,
+      ...(media.toObject ? media.toObject() : media),
       url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
       thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
     }))
@@ -1271,6 +1283,101 @@ exports.getLocationMedia = async (req, res) => {
     })
   } catch (error) {
     console.error("Error fetching location media:", error)
+    res.status(500).json({ status: false, message: "Internal server error" })
+  }
+}
+
+// New function for merchant to request deactivation
+exports.requestDeactivation = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+    const { reason } = req.body
+
+    const schema = joi.object({
+      reason: joi.string().required().messages({
+        "string.empty": "Reason for deactivation is required",
+        "any.required": "Reason for deactivation is required",
+      }),
+    })
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ status: false, message: error.details[0].message })
+    }
+
+    const merchant = await Merchant.findById(merchantId)
+    if (!merchant) {
+      return res.status(404).json({ status: false, message: "Merchant not found" })
+    }
+
+    if (merchant.deactivationRequest.status === "pending") {
+      return res.status(400).json({ status: false, message: "A deactivation request is already pending." })
+    }
+    if (!merchant.isActive) {
+      return res.status(400).json({ status: false, message: "Merchant account is already inactive." })
+    }
+
+    merchant.deactivationRequest = {
+      status: "pending",
+      reason: reason,
+      requestedAt: new Date(),
+      handledAt: null,
+    }
+    merchant.applicationHistory.push({
+      status: "Deactivate request for remolding", // Matching the image
+      description: `Deactivation requested by merchant. Reason: ${reason}`,
+      date: new Date(),
+    })
+    await merchant.save()
+
+    res.status(200).json({ status: true, message: "Deactivation request submitted successfully." })
+  } catch (error) {
+    console.error("Error submitting deactivation request:", error)
+    res.status(500).json({ status: false, message: "Internal server error" })
+  }
+}
+
+// New function for merchant to request reactivation
+exports.requestReactivation = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+    const { reason } = req.body
+
+    const schema = joi.object({
+      reason: joi.string().optional().allow(null, ""), // Reason is optional for reactivation
+    })
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ status: false, message: error.details[0].message })
+    }
+
+    const merchant = await Merchant.findById(merchantId)
+    if (!merchant) {
+      return res.status(404).json({ status: false, message: "Merchant not found" })
+    }
+
+    if (merchant.reactivationRequest.status === "pending") {
+      return res.status(400).json({ status: false, message: "A reactivation request is already pending." })
+    }
+    if (merchant.isActive) {
+      return res.status(400).json({ status: false, message: "Merchant account is already active." })
+    }
+
+    merchant.reactivationRequest = {
+      status: "pending",
+      reason: reason || null,
+      requestedAt: new Date(),
+      handledAt: null,
+    }
+    merchant.applicationHistory.push({
+      status: "Request Reactivation", // Matching the image
+      description: `Reactivation requested by merchant. Reason: ${reason || "No reason provided."}`,
+      date: new Date(),
+    })
+    await merchant.save()
+
+    res.status(200).json({ status: true, message: "Reactivation request submitted successfully." })
+  } catch (error) {
+    console.error("Error submitting reactivation request:", error)
     res.status(500).json({ status: false, message: "Internal server error" })
   }
 }

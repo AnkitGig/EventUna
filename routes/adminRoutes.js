@@ -15,8 +15,8 @@ router.post("/place-preference", protect, isAdmin, admin.placePreferences)
 router.post("/add-subservices", protect, isAdmin, admin.subServices)
 router.post("/add-restaurant-category", protect, isAdmin, admin.addRestaurantCategory)
 router.get("/restaurant-categories", protect, isAdmin, admin.getRestaurantCategories)
+router.patch("/update-merchant-approval-status", protect, isAdmin, admin.updateMerchantApprovalStatus) // Existing route
+router.patch("/handle-deactivation-request", protect, isAdmin, admin.handleDeactivationRequest) // New route
+router.patch("/handle-reactivation-request", protect, isAdmin, admin.handleReactivationRequest) // New route
 
 module.exports = router
-
-
-
