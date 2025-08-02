@@ -53,7 +53,7 @@ router.post(
   ]),
   merchant.addLocationMedia,
 )
-router.get("/location-media", protect, merchant.getLocationMedia)
+router.get("/location-media",  merchant.getLocationMedia)
 
 // Update a specific media item by its id in a service location
 router.put("/update-location-media", protect, uploadLocationMedia.single("media"), merchant.updateLocationMediaById)
