@@ -728,6 +728,7 @@ exports.updateLocationMediaById = async (req, res) => {
     if (!mediaItem) {
       return res.status(404).json({ status: false, message: "Media item not found" })
     }
+    // Accept empty string for description, update if provided
     if (description !== undefined) mediaItem.description = description
     if (req.file) {
       const fs = require("fs")
