@@ -1258,7 +1258,7 @@ exports.getLocationMediaById = async (req, res) => {
 exports.getLocationMedia = async (req, res) => {
   try {
     const merchantId = req.user.id
-    const { locationId } = req.body
+    const { locationId } = req.query
 
     if (!locationId) {
       return res.status(400).json({ status: false, message: "locationId is required" })
