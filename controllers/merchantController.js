@@ -1,3 +1,35 @@
+// GET API: Get all media for a service location
+exports.getLocationMedia = async (req, res) => {
+  try {
+    const merchantId = req.user.id
+    const { locationId } = req.body
+
+    if (!locationId) {
+      return res.status(400).json({ status: false, message: "locationId is required" })
+    }
+
+    const location = await ServiceLocation.findOne({ _id: locationId, merchantId })
+    if (!location) {
+      return res.status(404).json({ status: false, message: "Service location not found" })
+    }
+
+    // Map media with URLs
+    const mediaList = (location.locationPhotoVideoList || []).map((media) => ({
+      ...media.toObject ? media.toObject() : media,
+      url: media.file ? `${process.env.BASE_URL}/merchant/locations/${media.file}` : undefined,
+      thumbnailUrl: media.thumbnail ? `${process.env.BASE_URL}/merchant/locations/${media.thumbnail}` : undefined,
+    }))
+
+    res.status(200).json({
+      status: true,
+      message: "Location media fetched successfully",
+      data: mediaList,
+    })
+  } catch (error) {
+    console.error("Error fetching location media:", error)
+    res.status(500).json({ status: false, message: "Internal server error" })
+  }
+}
 const Merchant = require("../models/merchant/Merchant")
 const Services = require("../models/merchant/Services")
 const Subservices = require("../models/merchant/Subservices")
