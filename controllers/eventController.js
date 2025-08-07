@@ -275,6 +275,9 @@ exports.createEvent = async (req, res) => {
 
     await newEvent.save({ session })
 
+    // Add the event creator to the group chat
+    await createOrAddMembersToGroupChat(newEvent._id, req.user.id, session)
+
     const contacts = await User.find({
       _id: { $in: contactListIds },
       ios_register_id: { $ne: null },
