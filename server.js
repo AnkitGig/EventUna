@@ -11,7 +11,6 @@ const multer = require("multer"); // Import multer
 const fs = require("fs");
 const mime = require("mime");
 
-
 dotenv.config();
 
 const app = express();
@@ -23,7 +22,6 @@ createDirectories();
 // ✅ Connect to DB
 connectDB();
 
-
 // ✅ Middlewares
 app.use(express.json());
 app.use(morgan("dev"));
@@ -31,10 +29,48 @@ app.use(morgan("dev"));
 // Product/category/subcategory APIs
 app.use("/api/products", productRoutes);
 
-
 // ✅ Serve all static files (incl. video streaming) from 'public' and its subfolders via /api/*
 app.get("/api/merchant/locations/:filename", (req, res) => {
   const filePath = path.join(__dirname, "public/merchant/locations", req.params.filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send("File not found");
+  }
+
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (!range) {
+    res.writeHead(200, {
+      "Content-Length": fileSize,
+      "Content-Type": mime.getType(filePath),
+      "Content-Disposition": "inline"
+    });
+    fs.createReadStream(filePath).pipe(res);
+  } else {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    const chunkSize = end - start + 1;
+    const file = fs.createReadStream(filePath, { start, end });
+
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunkSize,
+      "Content-Type": mime.getType(filePath),
+      "Content-Disposition": "inline"
+    });
+
+    file.pipe(res);
+  }
+});
+
+// ✅ Serve event media files with video streaming support
+app.get("/api/event/media/:filename", (req, res) => {
+  const filePath = path.join(__dirname, "public/event/media", req.params.filename);
 
   if (!fs.existsSync(filePath)) {
     return res.status(404).send("File not found");
@@ -85,7 +121,13 @@ app.use((error, req, res, next) => {
       return res.status(400).json({
         status: false,
         message:
-          "File too large. Maximum size allowed is 10MB for documents and 50MB for videos.",
+          "File too large. Maximum size allowed is 100MB for event media.",
+      });
+    }
+    if (error.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json({
+        status: false,
+        message: "Too many files. Maximum 10 files allowed per upload.",
       });
     }
   }
@@ -108,9 +150,6 @@ app.use((error, req, res, next) => {
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-
-
-
 
 // ✅ Start Server
 app.listen(PORT, () => {

@@ -8,10 +8,12 @@ const createDirectories = () => {
     "./public/profile",
     "./public/services",
     "./public/event",
+    "./public/event/media", // Add event media directory
     "./public/merchant",
     "./public/merchant/documents",
     "./public/merchant/banners",
     "./public/merchant/locations",
+    "./public/merchant/products", // Add products directory if missing
   ]
 
   directories.forEach((dir) => {
