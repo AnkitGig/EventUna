@@ -23,6 +23,10 @@ router.get("/events/:id", protect, event.getEventById)
 router.post("/respond-to-invitation", protect, event.respondToInvitation) // New route
 router.get("/my-invitations", protect, event.getEventInvitations) // New route
 
+// New routes added here
+router.post("/send-reminder", protect, event.sendInvitationReminder) // New route for sending reminders
+router.get("/pending-invitations", protect, event.getEventPendingInvitations) // New route for getting pending invitations
+
 // Example protected route
 router.get("/admin-only", protect, isAdmin, (req, res) => {
   res.json({ message: "Welcome Admin!" })

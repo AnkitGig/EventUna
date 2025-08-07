@@ -760,3 +760,137 @@ exports.getEventInvitations = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error." })
   }
 }
+
+exports.sendInvitationReminder = async (req, res) => {
+  try {
+    const { eventId, userId } = req.body
+    const eventCreatorId = req.user.id
+
+    const schema = joi.object({
+      eventId: joi.string().required(),
+      userId: joi.string().required(),
+    })
+
+    const { error } = schema.validate(req.body)
+    if (error) {
+      return res.status(400).json({ status: false, message: error.details[0].message })
+    }
+
+    // Find the event and verify the current user is the creator
+    const event = await Event.findById(eventId).populate("userId", "fullName")
+    if (!event) {
+      return res.status(404).json({ status: false, message: "Event not found." })
+    }
+
+    if (event.userId._id.toString() !== eventCreatorId) {
+      return res.status(403).json({ status: false, message: "Only the event creator can send reminders." })
+    }
+
+    // Check if the user is invited and has pending status
+    const invitedUser = event.invitedUsers.find((inv) => inv.userId.toString() === userId)
+    if (!invitedUser) {
+      return res.status(404).json({ status: false, message: "User is not invited to this event." })
+    }
+
+    if (invitedUser.status !== "pending") {
+      return res.status(400).json({ 
+        status: false, 
+        message: `User has already ${invitedUser.status} the invitation.` 
+      })
+    }
+
+    // Get the invited user's details for notification
+    const invitedUserDetails = await User.findById(userId).select("ios_register_id fullName")
+    if (!invitedUserDetails) {
+      return res.status(404).json({ status: false, message: "Invited user not found." })
+    }
+
+    // Send push notification reminder
+    if (invitedUserDetails.ios_register_id) {
+      await sendPushNotification(
+        invitedUserDetails.ios_register_id,
+        "Event Reminder",
+        `Don't forget to respond to: ${event.eventTitle}`,
+        { eventId: event._id.toString(), type: "reminder" }
+      )
+    }
+
+    // Save notification to database
+    await saveNotifications(
+      userId,
+      "Event Reminder",
+      `${event.userId.fullName} sent you a reminder for: ${event.eventTitle}`,
+      { eventId: event._id.toString(), type: "reminder" }
+    )
+
+    res.status(200).json({
+      status: true,
+      message: "Reminder sent successfully.",
+    })
+  } catch (error) {
+    console.error("Error sending invitation reminder:", error)
+    res.status(500).json({ status: false, message: "Internal server error." })
+  }
+}
+
+exports.getEventPendingInvitations = async (req, res) => {
+  try {
+    const { eventId } = req.query
+    const eventCreatorId = req.user.id
+
+    if (!eventId) {
+      return res.status(400).json({ status: false, message: "Event ID is required" })
+    }
+
+    // Find the event and verify the current user is the creator
+    const event = await Event.findById(eventId)
+      .populate("invitedUsers.userId", "fullName email profilePic")
+      .exec()
+
+    if (!event) {
+      return res.status(404).json({ status: false, message: "Event not found." })
+    }
+
+    if (event.userId.toString() !== eventCreatorId) {
+      return res.status(403).json({ status: false, message: "Only the event creator can view pending invitations." })
+    }
+
+    // Filter only pending invitations
+    const pendingInvitations = event.invitedUsers
+      .filter(inv => inv.status === "pending")
+      .map(inv => {
+        const user = inv.userId
+        return {
+          userId: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          profilePic: user.profilePic 
+            ? `${process.env.BASE_URL}/profile/${user.profilePic}` 
+            : process.env.DEFAULT_PROFILE_PIC,
+          invitedAt: inv.createdAt || event.createdAt,
+          status: inv.status
+        }
+      })
+
+    if (pendingInvitations.length === 0) {
+      return res.status(200).json({
+        status: true,
+        message: "No pending invitations found.",
+        data: []
+      })
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Pending invitations retrieved successfully.",
+      data: {
+        eventTitle: event.eventTitle,
+        eventId: event._id,
+        pendingInvitations
+      }
+    })
+  } catch (error) {
+    console.error("Error getting pending invitations:", error)
+    res.status(500).json({ status: false, message: "Internal server error." })
+  }
+}
