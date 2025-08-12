@@ -17,6 +17,8 @@ router.delete('/subcategory', protect, productController.deleteSubcategory);
 // Product routes
 router.post('/product', protect, uploadProductPhoto.array('photo'), productController.addProduct);
 router.get('/products', protect, productController.getProducts);
+// Get products by categoryId
+router.get('/productBy/category', protect, productController.getProductsByCategory);
 router.delete('/product', protect, productController.deleteProduct)
 router.put('/product', protect,uploadProductPhoto.array("photos"), productController.updateProduct);
 

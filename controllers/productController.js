@@ -286,6 +286,28 @@ exports.getProducts = async (req, res) => {
   }
 };
 
+  // Get products by categoryId
+  exports.getProductsByCategory = async (req, res) => {
+    try {
+      const { categoryId } = req.query;
+      if (!categoryId) {
+        return res.status(400).json({ status: false, message: "categoryId is required" });
+      }
+      const products = await Product.find({ categoryId });
+      if (products.length === 0) {
+        return res.status(404).json({ status: false, message: "No products found for this category" });
+      }
+      products.map((product) => {
+        product.photo = product.photo.map((photo) => {
+          return (photo.fileName = `${process.env.BASE_URL}/merchant/products/${photo.fileName}`);
+        });
+      });
+      res.json({ status: true, data: products });
+    } catch (err) {
+      res.status(500).json({ status: false, message: err.message });
+    }
+  };
+
 exports.deleteProduct = async (req, res) => {
   try {
     const { productId } = req.body;
