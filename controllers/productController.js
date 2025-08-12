@@ -33,7 +33,17 @@ exports.addCategory = async (req, res) => {
 exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find({ userId: req.user.id });
-    res.json({ status: true, data: categories });
+    // Get product count for each category
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        const productCount = await Product.countDocuments({ categoryId: category._id });
+        return {
+          ...category.toObject(),
+          productCount,
+        };
+      })
+    );
+    res.json({ status: true, data: categoriesWithCount });
   } catch (err) {
     res.status(500).json({ status: false, message: err.message });
   }
