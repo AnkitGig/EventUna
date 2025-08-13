@@ -501,9 +501,13 @@ exports.updateServiceLocation = async (req, res) => {
 
     const schema = joi.object({
       locationId: joi.string().required(),
-      capacity: joi.number().optional(),
-      floorPlan: joi.string().optional(),
-      locationPhone: joi.string().optional(),
+      addressName: joi.string().optional().allow(""),
+      address: joi.string().optional().allow(""),
+      lat: joi.number().optional().allow(null),
+      long: joi.number().optional().allow(null),
+      capacity: joi.number().optional().allow(null),
+      floorPlan: joi.string().optional().allow(""),
+      locationPhone: joi.string().optional().allow(""),
       openTwoShifts: joi.boolean().optional(),
       weeklySchedule: joi
         .array()
@@ -528,7 +532,7 @@ exports.updateServiceLocation = async (req, res) => {
           }),
         )
         .optional(),
-      photoDescription: joi.string().optional(),
+      photoDescription: joi.string().optional().allow("")
     })
 
     const { error } = schema.validate(validationData)
@@ -539,18 +543,51 @@ exports.updateServiceLocation = async (req, res) => {
       })
     }
 
-    const updateData = { ...req.body }
-
-    // Use parsed schedule in update data
-    if (parsedWeeklySchedule) {
-      updateData.weeklySchedule = parsedWeeklySchedule
+    // Find the existing location first
+    const existingLocation = await ServiceLocation.findOne({ _id: req.body.locationId, merchantId })
+    if (!existingLocation) {
+      return res.status(404).json({
+        status: false,
+        message: "Service location not found",
+      })
     }
+
+    let updateData = {}
+    // Only update fields that are present and not blank/null/undefined
+    const updatableFields = [
+      "addressName",
+      "address",
+      "lat",
+      "long",
+      "capacity",
+      "floorPlan",
+      "locationPhone",
+      "openTwoShifts",
+      "weeklySchedule",
+      "photoDescription"
+    ]
+    updatableFields.forEach((field) => {
+      if (
+        req.body[field] !== undefined &&
+        req.body[field] !== null &&
+        !(typeof req.body[field] === "string" && req.body[field].trim() === "")
+      ) {
+        // Use parsedWeeklySchedule for weeklySchedule
+        if (field === "weeklySchedule" && parsedWeeklySchedule) {
+          updateData[field] = parsedWeeklySchedule
+        } else {
+          updateData[field] = req.body[field]
+        }
+      }
+    })
 
     // Handle media uploads
 
-    const location = await ServiceLocation.findOneAndUpdate({ _id: req.body.locationId, merchantId }, updateData, {
-      new: true,
-    })
+    const location = await ServiceLocation.findOneAndUpdate(
+      { _id: req.body.locationId, merchantId },
+      updateData,
+      { new: true }
+    )
 
     if (!location) {
       return res.status(404).json({
