@@ -441,12 +441,20 @@ exports.addServiceLocation = async (req, res) => {
 
     const { addressName, address, lat, long } = req.body
 
+    // Always set empty arrays for weeklySchedule and locationPhotoVideoList
     const newLocation = new ServiceLocation({
       merchantId,
       addressName,
       address,
       lat,
       long,
+      weeklySchedule: [],
+      locationPhotoVideoList: [],
+      openTwoShifts: false,
+      floorPlan: "",
+      locationPhone: "",
+      capacity: null, // Optional field, can be null
+
     })
 
     await newLocation.save()
@@ -456,10 +464,15 @@ exports.addServiceLocation = async (req, res) => {
       $push: { serviceLocationIds: newLocation._id },
     })
 
+    // Ensure response always has arrays for weeklySchedule and locationPhotoVideoList
+    const locationObj = newLocation.toObject()
+    locationObj.weeklySchedule = Array.isArray(locationObj.weeklySchedule) ? locationObj.weeklySchedule : [];
+    locationObj.locationPhotoVideoList = Array.isArray(locationObj.locationPhotoVideoList) ? locationObj.locationPhotoVideoList : [];
+
     res.status(201).json({
       status: true,
       message: "Service location added successfully",
-      data: newLocation,
+      data: locationObj,
     })
   } catch (error) {
     console.error("Error adding service location:", error)
