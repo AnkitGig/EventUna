@@ -1,0 +1,3517 @@
+{
+	"info": {
+		"_postman_id": "f7a8df27-9fd0-43ee-a043-42a49b91c7f4",
+		"name": "Event",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1164167",
+		"_collection_link": "https://event1-6644.postman.co/workspace/Event-Wala~248c291a-0617-4354-82ab-97fc6de8a1de/collection/40233504-f7a8df27-9fd0-43ee-a043-42a49b91c7f4?action=share&source=collection_link&creator=1164167"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "User Singup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "// {\r\n//   \"fullName\": \"shanu  shukla\",\r\n//    \"email\": \"shanushukla@gmail.com\",\r\n//   \"mobile\": \"9089089088\",\r\n//   \"password\": \"123456\",\r\n//   \"countryCode\":\"+91\"\r\n// }\r\n\r\n{\r\n  \"fullName\": \"Ankit  Rajput\",\r\n   \"email\": \"AnkitRajput@gmail.com\",\r\n  \"mobile\": \"8052807490\",\r\n  \"password\": \"123456\",\r\n  \"countryCode\":\"+91\"\r\n}\r\n \r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/signup",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Verify",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"userId\": \"68905696156f561e6923a38e\",\r\n  \"otp\": \"0000\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/verify-otp",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "// {\r\n//   \"email\": \"savitakeshav35@gmail.com\",\r\n//   \"password\": \"1234567\",\r\n//   \"ios_register_id\": \"1234\",\r\n//   \"register_id\": \"1234\"\r\n// }\r\n\r\n// { \"email\": \"admin@yopmail.com\",\r\n//   \"password\": \"admin@420\"}\r\n\r\n   {  \"email\": \"AnkitRajput@gmail.com\",\r\n  \"password\": \"123456\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/login",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "forgot-password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"Rakesh1212@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/forgot-password",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset-password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"userId\": \"687def3383bee5e63cd8ae6a\",\r\n  \"otp\": \"0000\",\r\n  \"newPassword\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/reset-password",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update-profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0MjkwNzA5LCJleHAiOjE3NTQzNzcxMDl9.OLwB5y8SVIWjcSH6jqVnwAJz_OG-PkdDZbfR4bqf2JY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "profilePic",
+									"type": "file",
+									"src": "/C:/Users/anilp/OneDrive/Desktop/Pizza-3007395.jpg"
+								},
+								{
+									"key": "dob",
+									"value": "14-01-2000",
+									"type": "text"
+								},
+								{
+									"key": "gender",
+									"value": "MALE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{event}}/auth/update-profile",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-profile",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0MjkwNzA5LCJleHAiOjE3NTQzNzcxMDl9.OLwB5y8SVIWjcSH6jqVnwAJz_OG-PkdDZbfR4bqf2JY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "id",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/user-profile?id=68905696156f561e6923a38e",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"user-profile"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "68905696156f561e6923a38e"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add-address",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0MjkwNzA5LCJleHAiOjE3NTQzNzcxMDl9.OLwB5y8SVIWjcSH6jqVnwAJz_OG-PkdDZbfR4bqf2JY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\r\n    \"addressName\": \"Marimata\",\r\n    \"address1\": \"Indore\",\r\n    \"address2\": \"MP\",\r\n    \"postcode\": \"452001\"\r\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/add-address",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"add-address"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "address",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0MjkwNzA5LCJleHAiOjE3NTQzNzcxMDl9.OLwB5y8SVIWjcSH6jqVnwAJz_OG-PkdDZbfR4bqf2JY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{event}}/auth/address",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"address"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "all-user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0MjkwNzA5LCJleHAiOjE3NTQzNzcxMDl9.OLwB5y8SVIWjcSH6jqVnwAJz_OG-PkdDZbfR4bqf2JY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{event}}/auth/all-users",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"all-users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "event",
+			"item": [
+				{
+					"name": "registry",
+					"item": [
+						{
+							"name": "registry",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmY5NjMyYjZmM2YwYWYxYTAxNDdiNSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyNTYxOTcyLCJleHAiOjE3NTI2NDgzNzJ9.srba1fJnr-riaxudWr5QcdKMWNfhUcgQS6L4O_lZhuA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"email\": \"admin@yopmail.com\",\r\n  \"password\": \"admin@420\",\r\n  \"ios_register_id\": \"demo1\",\r\n  \"register_id\": \"demo2\"\r\n}\r\n\r\n\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\","
+								},
+								"url": {
+									"raw": "{{event}}/event/registry",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"event",
+										"registry"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "registry",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmY5NjMyYjZmM2YwYWYxYTAxNDdiNSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyNjczNTYwLCJleHAiOjE3NTI3NTk5NjB9.CRpDDetmbzQW9zRG3a7pr7xXQLePuuAZBHZh4eZy3rU",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"registryName\": \"hello\",\r\n  \"registryUrtl\": \"https://localhost:5000\"\r\n\r\n}\r\n\r\n\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\",",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/event/registry",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"event",
+										"registry"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "search",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmY5NjMyYjZmM2YwYWYxYTAxNDdiNSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyNTYxOTcyLCJleHAiOjE3NTI2NDgzNzJ9.srba1fJnr-riaxudWr5QcdKMWNfhUcgQS6L4O_lZhuA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"registryName\": \"kkdkkkk\",\r\n  \"registryUrtl\": \"https://localhost:5000\"\r\n\r\n}\r\n\r\n\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\","
+								},
+								"url": {
+									"raw": "{{event}}/event/registry/search?query=k",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"event",
+										"registry",
+										"search"
+									],
+									"query": [
+										{
+											"key": "query",
+											"value": "k"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "event-type",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{event}}/event/event-type",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-type"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "event-category",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/event/event-category/686fb915bf59f5756d913e51",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-category",
+								"686fb915bf59f5756d913e51"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "event-category",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n   \"category\" :\"Marathon\",\r\n   \"eventType\" : \"6878e07e4b6ea77d44a018f0\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/event/event-category",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-category"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "event-type",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"eventType\": \"Sports\"\r\n}\r\n\r\n \r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/event/event-type",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-type"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "place-preferences",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{event}}/event/place-preferences",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"place-preferences"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "686cdf1536eb16cac37ab4e2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get-All-Event",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0NTQzNjI4LCJleHAiOjE3NTQ2MzAwMjh9.Be6fQ8I0CDSz80ste-Rg_frldD76ThmbAWuUFN0Ft6g",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{event}}/event/events",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"events"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "686cdf1536eb16cac37ab4e2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get-Event-By-Id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0NTQ0ODM2LCJleHAiOjE3NTQ2MzEyMzZ9.tICgdcEhLC79HkB-puoJMaGA2kf0uvhHYHHQPgSkvSM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{event}}/event/events/6890a753a334cf4471f536c1",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"events",
+								"6890a753a334cf4471f536c1"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "686cdf1536eb16cac37ab4e2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create-event",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0NTQ2MTgzLCJleHAiOjE3NTQ2MzI1ODN9.bqhaK_M2C5ZkcwfiN8Y03JFSVicwSstxDaX4SVVWlCo",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "eventTitle",
+									"value": "Event Testing Par Hai",
+									"type": "text"
+								},
+								{
+									"key": "eventDescription",
+									"value": "Let's celebrate together!",
+									"type": "text"
+								},
+								{
+									"key": "eventTypeId",
+									"value": "686fb915bf59f5756d913e51",
+									"type": "text"
+								},
+								{
+									"key": "eventCategoryId",
+									"value": "686fbb86bf59f5756d913e7a",
+									"type": "text"
+								},
+								{
+									"key": "eventDate",
+									"value": "2025-07-16",
+									"type": "text"
+								},
+								{
+									"key": "eventStartTime",
+									"value": "18:00",
+									"type": "text"
+								},
+								{
+									"key": "eventEndTime",
+									"value": "21:00",
+									"type": "text"
+								},
+								{
+									"key": "placeId",
+									"value": "6877a82968d1e0b9fcdf5000",
+									"type": "text"
+								},
+								{
+									"key": "addressId",
+									"value": "6874f402acadeeb5dc65d143",
+									"type": "text"
+								},
+								{
+									"key": "bringalongGuest",
+									"value": "Yes",
+									"type": "text"
+								},
+								{
+									"key": "bringalongGuestNumber",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "rvsp",
+									"value": "Yes",
+									"type": "text"
+								},
+								{
+									"key": "rvspDateBy",
+									"value": "2025-07-16",
+									"type": "text"
+								},
+								{
+									"key": "noteIds",
+									"value": "[\"6874d2a23dcb3579cb37d45c\"]",
+									"type": "text"
+								},
+								{
+									"key": "amazonGiftUrlId",
+									"value": "6877ad3fd434a5faa62cfa82",
+									"type": "text"
+								},
+								{
+									"key": "pollId",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/anilp/OneDrive/Desktop/istockphoto-1363104923-1024x1024.jpg"
+								},
+								{
+									"key": "contactListIds",
+									"value": "[\"6894406b59221fc81577e9c4\"]",
+									"type": "text"
+								},
+								{
+									"key": "additionalServiceIds",
+									"value": "[\"687600dfc82e3e45e9a3293d\", \"687600dfc82e3e45e9a3293d\"]",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{event}}/event/create-event",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"create-event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "event-user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzhlZWZkNmU2NmVjZTg4NDhhZjVlZiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyNzU2NTAzLCJleHAiOjE3NTI4NDI5MDN9.T8spBJPkRbnp9fV44sGvAK-o6tNAqCMqGH2sXR9hm-U",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{event}}/event/event-user",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "686cdf1536eb16cac37ab4e2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "event-poll-vote",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjYyZTA2ZTFkMmQ3ZDEzYjM1ZGZkZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxOTc5Mzg3LCJleHAiOjE3NTIwNjU3ODd9.mmY5VwoxMwLCii8ta-A-d0SXfbFz4MKkEJhLVu60xRE",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"pollId\": \"686cf873b2b531f8ccd48c47\",\r\n    \"optionId\": \"686cf873b2b531f8ccd48c4a\",\r\n    \"action\": \"vote\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/event/event-poll-vote",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"event-poll-vote"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "notes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjQ4NzA1MiwiZXhwIjoxNzUyNTczNDUyfQ.t_tXHDOJzgEeGUHjSoQBmLxecgiwo0xsZDWCqxYT65U",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{event}}/event/notes",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "additonal-services",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjU2MzgyNSwiZXhwIjoxNzUyNjUwMjI1fQ.KfmnGmaqC_4rtIAvzzcNBghsujtRXtQCD6m4jNWHuAg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"admin@yopmail.com\",\r\n  \"password\": \"admin@420\",\r\n  \"ios_register_id\": \"demo1\",\r\n  \"register_id\": \"demo2\"\r\n}\r\n\r\n//  \"email\": \"admin@yopmail.com\",\r\n//   \"password\": \"admin@420\",\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\","
+						},
+						"url": {
+							"raw": "{{event}}/event/additional-services",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"additional-services"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "poll",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmY2MDlhOTA1YzM3YTY4NjJmMDY2OCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyNDc0NTg2LCJleHAiOjE3NTI1NjA5ODZ9.o2vPsC5nNHAC1p0xO0mYA1oeTeoJtI_6SJT8CSw6RCo",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"question\": \"What theme should we pick for the birthday party?\",\r\n  \"options\": [\r\n    \"Marvel Superheroes\",\r\n    \"Disney Princess\",\r\n    \"Classic Black & White\"\r\n  ],\r\n  \"activeTill\": \"2025-07-20\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/event/poll",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"poll"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "merchant",
+			"item": [
+				{
+					"name": "Profile Management",
+					"item": [
+						{
+							"name": "Update Service Profile Copy",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": ""
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get marchent profile",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDI4NDQ1NywiZXhwIjoxNzU0MzcwODU3fQ.4K_5gzahngPnlM8N8ct7NEguLvWWBxp-t-YEgviSy-Q",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "{{event}}/merchant/profile",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"profile"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Location Management",
+					"item": [
+						{
+							"name": "Add Service Location",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NTA2OTI3NywiZXhwIjoxNzU1MTU1Njc3fQ.r4_vFYs2KTMYNC1GZlycl8C-Vvls4mPcHZuxE-7HGnE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"addressName\": \"Demo Ankit 11222\",\n  \"address\": \"Indore\",\n  \"lat\": 40.7128,\n  \"long\": -74.0060\n}"
+								},
+								"url": {
+									"raw": "{{local}}/merchant/add-location",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"merchant",
+										"add-location"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Service Location",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NTA2OTI3NywiZXhwIjoxNzU1MTU1Njc3fQ.r4_vFYs2KTMYNC1GZlycl8C-Vvls4mPcHZuxE-7HGnE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"addressName\": \"Deosssssssee Location\",\r\n  \"address\": \"Indsssssssoree\",\r\n  \"lat\": null,\r\n  \"long\": -74.0060,\r\n \"locationId\":\"689c50be07771f083331e2d8\",\r\n  \"capacity\": 2001,\r\n  \"floorPlan\": \"https://exampleeee.com/floorplan.pdf\",\r\n  \"locationPhone\": \"9876543210\",\r\n  \"openTwoShifts\": true,\r\n  \"weeklySchedule\": [\r\n    {\r\n      \"day\": \"Sunday\",\r\n      \"morning\": { \"from\": \"08:00\", \"to\": \"12:00\" },\r\n      \"evening\": { \"from\": \"14:00\", \"to\": \"18:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Monday\",\r\n      \"morning\": { \"from\": \"09:00\", \"to\": \"13:00\" },\r\n      \"evening\": { \"from\": \"15:00\", \"to\": \"19:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Tuesday\",\r\n      \"morning\": { \"from\": \"09:00\", \"to\": \"13:00\" },\r\n      \"evening\": { \"from\": \"15:00\", \"to\": \"19:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Wednesday\",\r\n      \"morning\": { \"from\": \"09:00\", \"to\": \"13:00\" },\r\n      \"evening\": { \"from\": \"15:00\", \"to\": \"19:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Thursday\",\r\n      \"morning\": { \"from\": \"09:00\", \"to\": \"13:00\" },\r\n      \"evening\": { \"from\": \"15:00\", \"to\": \"19:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Friday\",\r\n      \"morning\": { \"from\": \"09:00\", \"to\": \"13:00\" },\r\n      \"evening\": { \"from\": \"15:00\", \"to\": \"19:00\" }\r\n    },\r\n    {\r\n      \"day\": \"Saturday\",\r\n      \"morning\": { \"from\": \"08:00\", \"to\": \"12:00\" },\r\n      \"evening\": { \"from\": \"14:00\", \"to\": \"18:00\" }\r\n    }\r\n  ]\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local}}/merchant/update-location",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"merchant",
+										"update-location"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Location By Id",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{local}}/merchant/location?locationId=689c50be07771f083331e2d8",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"merchant",
+										"location"
+									],
+									"query": [
+										{
+											"key": "locationId",
+											"value": "688daac8a80da4702a6ba69a",
+											"disabled": true
+										},
+										{
+											"key": "locationId",
+											"value": "689c50be07771f083331e2d8"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Location Media (Updated)",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDI4Nzg1NywiZXhwIjoxNzU0Mzc0MjU3fQ.lCoyqFRRqcW_mJ7xqV52aF6p9trkSIbsN5TjoH2Exco",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "locationId",
+											"value": "688daac8a80da4702a6ba69a",
+											"type": "text"
+										},
+										{
+											"key": "media",
+											"type": "file",
+											"src": "/C:/Users/anilp/OneDrive/Desktop/17 July 2025.mp4"
+										},
+										{
+											"key": "types",
+											"value": "video",
+											"description": "Enum Two Types video / photo",
+											"type": "text"
+										},
+										{
+											"key": "photoDescription",
+											"value": "Today",
+											"description": "text",
+											"type": "text"
+										},
+										{
+											"key": "thumbnails",
+											"description": "Optional thumbnail files for videos. Must match order of media files.",
+											"type": "file",
+											"src": "/C:/Users/anilp/OneDrive/Desktop/italian-cuisine-6903774_960_720.jpg"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{event}}/merchant/add-location-media",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"add-location-media"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Location Media By Id",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"locationId\": \"<locationId>\",\n  \"mediaId\": \"<mediaId>\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/delete-location-media",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"delete-location-media"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Location Media By Id",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "locationId",
+											"value": "<locationId>",
+											"type": "text"
+										},
+										{
+											"key": "mediaId",
+											"value": "<mediaId>",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Updated description",
+											"type": "text"
+										},
+										{
+											"key": "media",
+											"value": "",
+											"type": "file"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{event}}/merchant/update-location-media",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"update-location-media"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Location",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDI4Nzg1NywiZXhwIjoxNzU0Mzc0MjU3fQ.lCoyqFRRqcW_mJ7xqV52aF6p9trkSIbsN5TjoH2Exco",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{event}}/merchant/locations",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"locations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Location Media",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OGRmNDU5ZWUxZjk5YTA5NDMwNjFjYiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDI4NTc0OSwiZXhwIjoxNzU0MzcyMTQ5fQ.P4WlZCE9mjuKXwp3La-LqluzpcX0cSOINR3UeIM0qC8",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}",
+										"disabled": true
+									}
+								],
+								"url": {
+									"raw": "{{local}}/merchant/location-media?locationId=688dfce90a125cb4fb6c110f",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"merchant",
+										"location-media"
+									],
+									"query": [
+										{
+											"key": "locationId",
+											"value": "688dfce90a125cb4fb6c110f"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Coupon Management",
+					"item": [
+						{
+							"name": "Add Coupon",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1MzQxODg3MSwiZXhwIjoxNzUzNTA1MjcxfQ.t_rILp-eVTRDYfxRFgcM55YPmNR-evZyOWc-xMb0CoY",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"couponName\": \"Summer Discount\",\n  \"discount\": \"20\",\n  \"validFrom\": \"01-08-2025\",\n  \"validTo\": \"31-08-2025\",\n  \"description\": \"Get 20% off during Augustdddddddd!\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/add-coupon",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"add-coupon"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get By Id Coupon",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{event}}/merchant/coupon?couponId=6883848dc5a21a4601fd2f64",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"coupon"
+									],
+									"query": [
+										{
+											"key": "couponId",
+											"value": "6883848dc5a21a4601fd2f64"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Coupon",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{event}}/merchant/all-coupons",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"all-coupons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Coupon",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1MzMzOTY3MCwiZXhwIjoxNzUzNDI2MDcwfQ.g8GlHDuVFvUq3RbS0i5Ma8RssfJPu0IbBzSdjkm7JUk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"couponId\":\"688318ffdd7108a9774ea5f1\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/merchant/delete-coupon",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"delete-coupon"
+									]
+								},
+								"description": "Generated from cURL: curl -X DELETE https://your-domain.com/delete-coupon \\\n  -H \"Authorization: Bearer YOUR_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"couponId\":\"YOUR_COUPON_ID\"}'"
+							},
+							"response": []
+						},
+						{
+							"name": "Update a Coupon",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1MzMzOTY3MCwiZXhwIjoxNzUzNDI2MDcwfQ.g8GlHDuVFvUq3RbS0i5Ma8RssfJPu0IbBzSdjkm7JUk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer YOUR_TOKEN"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"couponId\": \"68831dfe405ba73675a08d7d\",\r\n  \"couponName\": \"Summer Special\",\r\n  \"discount\": \"20\",\r\n  \"validFrom\": \"01-08-2025\",\r\n  \"validTo\": \"31-08-2025\",\r\n  \"description\": \"Get 20% off on all services in August!\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/merchant/update-coupon",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"update-coupon"
+									]
+								},
+								"description": "Generated from cURL: curl -X DELETE https://your-domain.com/delete-coupon \\\n  -H \"Authorization: Bearer YOUR_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"couponId\":\"YOUR_COUPON_ID\"}'"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Services",
+					"item": [
+						{
+							"name": "Get All Services",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event}}/merchant/services",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"services"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Sub Services",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event}}/merchant/sub-services?id=686fb6ced46e9740ee8277ec",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"sub-services"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "686fb6ced46e9740ee8277ec"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Authentication",
+					"item": [
+						{
+							"name": "Merchant Signup",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"ankit@gmail.com\",\n  \"mobile\": \"9074805280\",\n  \"password\": \"123456\",\n  \"serviceId\": \"686fb6ced46e9740ee8277ec\",\n  \"register_id\": \"1234\",\n  \"ios_register_id\": \"1234\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/signup",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Verify OTP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"merchantId\": \"688debeea878259aa502b8c7\",\n  \"otp\": \"0000\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/verify-otp",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"verify-otp"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Resend OTP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"merchantId\": \"6880e3d973414ec531afff34\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/resend-otp",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"resend-otp"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Merchant Login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"let response = pm.response.json();\r",
+											"if (response.token) {\r",
+											"    pm.environment.set(\"merchant_token\", response.token);\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"keshavmerchant24@gmail.com\",\n  \"password\": \"123456\",\n  \"register_id\": \"1234\",\n  \"ios_register_id\": \"1234\"\n}\n// {\n//   \"email\": \"ankit@gmail.com\",\n//   \"password\": \"123456\",\n//   \"register_id\": \"1234\",\n//   \"ios_register_id\": \"1234\"\n// }"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/login",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Merchant Application History",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OGRmNDU5ZWUxZjk5YTA5NDMwNjFjYiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDI4MzQ1OSwiZXhwIjoxNzU0MzY5ODU5fQ.kJjJaHgUXXxOMG_zi0x6xOWl_CQr_32lnVEAsdzfTV4",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDEzMDY2NiwiZXhwIjoxNzU0MjE3MDY2fQ.FLTUArsdJ10bOcFGkSLk92IJcxMJtZJbpTFNYBoQDuA",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"merchantId\": \"68809ea03da9394113ede682\"\n}\n\n// {\n//   \"email\": \"demo1@example.com\",\n//   \"password\": \"123456\",\n//   \"register_id\": \"1234\",\n//   \"ios_register_id\": \"1234\"\n// }"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/profile",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Deactivation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reason\": \"Temporarily closing for renovations.\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/request-deactivation",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"request-deactivation"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Reactivation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{merchant_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"reason\": \"Renovations complete, ready to resume operations.\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/merchant/request-reactivation",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"merchant",
+										"request-reactivation"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Product",
+					"item": [
+						{
+							"name": "Get Categories",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDk5NzE0MiwiZXhwIjoxNzU1MDgzNTQyfQ.zK92G7_gvlRPHB6-K9jsGvaLAZ-NFDIQ4-qc51lHMbk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{local}}/products/categories",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"products",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Product Get Category Base",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDk5NzE0MiwiZXhwIjoxNzU1MDgzNTQyfQ.zK92G7_gvlRPHB6-K9jsGvaLAZ-NFDIQ4-qc51lHMbk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{local}}/products/productby/category?categoryId=6890aebb6ac95e8408342d65",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"products",
+										"productby",
+										"category"
+									],
+									"query": [
+										{
+											"key": "categoryId",
+											"value": "6890aebb6ac95e8408342d65"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Subcategory",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDAyMzk5NSwiZXhwIjoxNzU0MTEwMzk1fQ.vJ-zAlFagJ4XXYAOROKkCWbfNRqlLtNJLeLDd16VXU8",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Demo Subcategory\",\n  \"description\": \"all night pool party\",\n  \"categoryId\": \"688c486b82ba9fcb844ed76d\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/products/subcategory",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"subcategory"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDk5NzE0MiwiZXhwIjoxNzU1MDgzNTQyfQ.zK92G7_gvlRPHB6-K9jsGvaLAZ-NFDIQ4-qc51lHMbk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "Samosa",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "description of unique product",
+											"type": "text"
+										},
+										{
+											"key": "price",
+											"value": "100",
+											"type": "text"
+										},
+										{
+											"key": "categoryId",
+											"value": "6890aebb6ac95e8408342d65",
+											"type": "text"
+										},
+										{
+											"key": "subcategoryId",
+											"value": "688c489982ba9fcb844ed773",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "photo",
+											"type": "file",
+											"src": "/C:/Users/anilp/OneDrive/Desktop/Best-Mutton-Keema-Samosa-2.jpg"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{local}}/products/product",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"products",
+										"product"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Products",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NTA2MzI5MywiZXhwIjoxNzU1MTQ5NjkzfQ.2Re7Y2q7uIaFJsKyQf2OMjg7MhFNd7IF2OnCCbw8F2A",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1NDk5NzE3NiwiZXhwIjoxNzU1MDgzNTc2fQ.1yrUJkW8sa2UghNS_ZDZKbkYP1S3YtwsuaGCowMHDyc",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local}}/products/products",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"products",
+										"products"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Subcategories",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1Mzg4MDcyMywiZXhwIjoxNzUzOTY3MTIzfQ.QpbwJBbD2tOzAfT6jfV5OH-XNj8rvtQupxNk1eUaLfo",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"categoryId\": \"6889f3adf4a36dd2eb1b6f12\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/products/subcategories",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"subcategories"
+									],
+									"query": [
+										{
+											"key": "categoryId",
+											"value": "6889f3adf4a36dd2eb1b6f12",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Category",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDAyMzk5NSwiZXhwIjoxNzU0MTEwMzk1fQ.vJ-zAlFagJ4XXYAOROKkCWbfNRqlLtNJLeLDd16VXU8",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Demo Category\",\n  \"description\": \"we do party all night\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/products/category",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"category"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Product",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NTA2MzI5MywiZXhwIjoxNzU1MTQ5NjkzfQ.2Re7Y2q7uIaFJsKyQf2OMjg7MhFNd7IF2OnCCbw8F2A",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"productId\": \"688a08bbb7794b3349cb0174\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local}}/products/product",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"products",
+										"product"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "subCategory",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1Mzc4NzgwMywiZXhwIjoxNzUzODc0MjAzfQ.cG_ZLgvNERRSd_uHIQCLeh_G9ol01SfrWa4ItULzXhQ",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subcategoryId\": \"6888c494058dabfdc4694968\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/products/subcategory",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"subcategory"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "category",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1Mzc4NzgwMywiZXhwIjoxNzUzODc0MjAzfQ.cG_ZLgvNERRSd_uHIQCLeh_G9ol01SfrWa4ItULzXhQ",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"categoryId\": \"6888c446058dabfdc4694965\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{event}}/products/category",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"category"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update-product",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1Mzg3MTEzOSwiZXhwIjoxNzUzOTU3NTM5fQ.vz1MH0oLxMdRdC7jp9t9lzJsyIUD5PtTIiR0jHfNx3I",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1MzcwODQ0MSwiZXhwIjoxNzUzNzk0ODQxfQ.rqOIPg_GwKQ17i54D6jdycofPNhAH3EImJGWt7Bp2gM",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "productId",
+											"value": "688a08bbb7794b3349cb0174",
+											"type": "text"
+										},
+										{
+											"key": "name",
+											"value": "chustadddd",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "so called unique product",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "imageIds",
+											"value": "[\"688a13c021490e33543aa644\", \"688a13c021490e33543aa645\"]",
+											"type": "text"
+										},
+										{
+											"key": "photos",
+											"type": "file",
+											"src": [
+												"/C:/Users/admin/Downloads/image (5).png",
+												"/C:/Users/admin/Downloads/simulator_screenshot_F6D0320F-D78D-4EE4-87C2-C6FDF9A3ACA4 (1).png"
+											],
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "{{event}}/products/product?categoryId=6888b8ae1a094c67254bff4c",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"products",
+										"product"
+									],
+									"query": [
+										{
+											"key": "categoryId",
+											"value": "6888b8ae1a094c67254bff4c"
+										},
+										{
+											"key": "subcategoryId",
+											"value": "6888b8ec1a094c67254bff50",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Event Reminders (NEW)",
+			"item": [
+				{
+					"name": "Get Pending Invitations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{event}}/event/pending-invitations?eventId={{event_id}}",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"pending-invitations"
+							],
+							"query": [
+								{
+									"key": "eventId",
+									"value": "{{event_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Invitation Reminder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"userId\": \"6894406b59221fc81577e9c4\"\n}"
+						},
+						"url": {
+							"raw": "{{event}}/event/send-reminder",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"send-reminder"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Invitations",
+			"item": [
+				{
+					"name": "Get My Invitations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{event}}/event/my-invitations",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"my-invitations"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "Optional: pending, accepted, declined",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Respond to Invitation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventId\": \"{{event_id}}\",\n  \"status\": \"accepted\"\n}"
+						},
+						"url": {
+							"raw": "{{event}}/event/respond-to-invitation",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event",
+								"respond-to-invitation"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "Marchant",
+					"item": [
+						{
+							"name": "all-merchants",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1NDEyNjY1NCwiZXhwIjoxNzU0MjEzMDU0fQ.FsCqdOY3HqhHiGC1HHKvoKjRtjdQfnKlMfhgx6ygVzs",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"email\": \"ankit@gmail.com\",\r\n  \"password\": \"123456\",\r\n  \"ios_register_id\": \"demo1\",\r\n  \"register_id\": \"demo2\"\r\n}"
+								},
+								"url": {
+									"raw": "{{local}}/admin/all-merchants",
+									"host": [
+										"{{local}}"
+									],
+									"path": [
+										"admin",
+										"all-merchants"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Merchant Approval Status (Approve)",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{admin_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"merchantId\": \"<merchant_id_to_approve>\",\n  \"status\": \"approved\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/admin/update-merchant-approval-status",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"admin",
+										"update-merchant-approval-status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Merchant Approval Status (Reject)",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{admin_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"merchantId\": \"688df459ee1f99a0943061cb\",\n  \"status\": \"rejected\",\n  \"reason\": \"Incomplete documentation. Please provide valid business registration.\"\n}"
+								},
+								"url": {
+									"raw": "{{event}}/admin/update-merchant-approval-status",
+									"host": [
+										"{{event}}"
+									],
+									"path": [
+										"admin",
+										"update-merchant-approval-status"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "services",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjE1MTcyNCwiZXhwIjoxNzUyMjM4MTI0fQ.gDe0CzR-1EoW9XecAtQpHfMaz0fsI7TbL1MPN0TkAKw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\r\n    \"servicesName\": \"Entertainment & clown\"\r\n  }\r\n    \r\n\r\n \r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/add-services",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"add-services"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{event}}/merchant/services",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"merchant",
+								"services"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sub Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{event}}/merchant/sub-services?id=6881d0f52e858f084e04acb3",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"merchant",
+								"sub-services"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "6881d0f52e858f084e04acb3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add-notes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjQ4Njc3MywiZXhwIjoxNzUyNTczMTczfQ.ThF-_O0o_eGGq9GZ9lIbCtj4Xb0D9dnrBBsXZ3A_5RU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"notes\": \"Female only event\"\r\n \r\n}\r\n\r\n\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\",",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/add-notes",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"add-notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "all-user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjU2ODM5MywiZXhwIjoxNzUyNjU0NzkzfQ.pxXlJXtLyHYaSDNDd5R7zOSSboZ-8F8OC0SKCNCg_l4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"admin@yopmail.com\",\r\n  \"password\": \"admin@420\",\r\n  \"ios_register_id\": \"demo1\",\r\n  \"register_id\": \"demo2\"\r\n}\r\n\r\n\r\n\r\n//  \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\",",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/all-users",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"all-users"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "6867c4bf2c2d277f3718355b",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "additional-services",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjY3MzE4MiwiZXhwIjoxNzUyNzU5NTgyfQ.KeBAhRMbopnJGWWnZ9d_impraAhdaDGrwi3iREM5XhI",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serviceName\": \"Need Entertainment & Clownnnn\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/additional-services",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"additional-services"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "place-preference",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MjY0MjkyMiwiZXhwIjoxNzUyNzI5MzIyfQ.WEeinXJumRB70P5FRcUmrjDKMEvY9pfIwJW80epCdxU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"preference\": \"Other participating facilities\"\r\n\r\n}\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/place-preference",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"place-preference"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "subservices",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmZiNDFlNzkzMjk1N2E3ZmNjMmE2YiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzMzNzk5NCwiZXhwIjoxNzUzNDI0Mzk0fQ.qjPplWGSJlE-8GK48Ik_7vCF140NrzGBfAfx4CfAM-w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"subService\": \"South Indian\",\r\n    \"serviceId\": \"686fb6ced46e9740ee8277ec\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/admin/add-subservices",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"admin",
+								"add-subservices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"email\": \"admin@yopmail.com\",\r\n  \"password\": \"admin@420\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{event}}/auth/login",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "notification",
+			"item": [
+				{
+					"name": "user-event",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzhlZWZkNmU2NmVjZTg4NDhhZjVlZiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUyODMwNzkwLCJleHAiOjE3NTI5MTcxOTB9.kOOkAGmu9itg9OJbP2J2Am-kXWKCVZdVyHshqYkD7XM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"contactListIds\": [\"6877c07bed735e9ba8dfd239\"]\r\n\r\n}\r\n\r\n//  \"email\": \"admin@yopmail.com\",\r\n//   \"password\": \"admin@420\",\r\n// {\r\n//      \"email\": \"ankit@gmail.com\",\r\n//   \"password\": \"123456\"\r\n// }\r\n"
+						},
+						"url": {
+							"raw": "{{event}}/notifications/user-event-notification",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"notifications",
+								"user-event-notification"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat",
+			"item": [
+				{
+					"name": "Get Event Group Chat",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{event}}/chat/event-group-chat?eventId={{event_id}}",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"chat",
+								"event-group-chat"
+							],
+							"query": [
+								{
+									"key": "eventId",
+									"value": "{{event_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"chatId\": \"68944f737fbdceec656f5c7d\",\n  \"content\": \"Hello To 2\"\n}"
+						},
+						"url": {
+							"raw": "{{event}}/chat/send-message",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"chat",
+								"send-message"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{event}}/chat/messages?chatId=68944f737fbdceec656f5c7d",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"chat",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "chatId",
+									"value": "68944f737fbdceec656f5c7d"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Media API",
+			"item": [
+				{
+					"name": "Get Event Media",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{event}}/event-media/media?eventId={{eventId}}&page=1&limit=20",
+							"host": [
+								"{{event}}"
+							],
+							"path": [
+								"event-media",
+								"media"
+							],
+							"query": [
+								{
+									"key": "eventId",
+									"value": "{{eventId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like/Unlike Media",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaId\": \"{{mediaId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media/like",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Media",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaId\": \"{{mediaId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Comment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"commentId\": \"{{commentId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media/comment",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media",
+								"comment"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Comment to Media",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaId\": \"{{mediaId}}\",\n  \"comment\": \"Great photo! Love this moment.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media/comment",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media",
+								"comment"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like/Unlike Comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"commentId\": \"{{commentId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media/comment/like",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media",
+								"comment",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Media Comments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/event-media/media/comments?mediaId={{mediaId}}&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"media",
+								"comments"
+							],
+							"query": [
+								{
+									"key": "mediaId",
+									"value": "{{mediaId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Event Media",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "eventId",
+									"value": "{{eventId}}",
+									"type": "text"
+								},
+								{
+									"key": "caption",
+									"value": "Amazing moment from our event!",
+									"type": "text"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/C:/Users/anilp/OneDrive/Desktop/Pizza-3007395.jpg"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/event-media/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"event-media",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get A Marchent",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{event}}/merchant/restaurants/nearby?lat=22.7196&long=75.8577&radius=1000",
+					"host": [
+						"{{event}}"
+					],
+					"path": [
+						"merchant",
+						"restaurants",
+						"nearby"
+					],
+					"query": [
+						{
+							"key": "lat",
+							"value": "22.7196"
+						},
+						{
+							"key": "long",
+							"value": "75.8577"
+						},
+						{
+							"key": "radius",
+							"value": "1000"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "event",
+			"value": "https://eventuna.onrender.com/api",
+			"type": "string"
+		},
+		{
+			"key": "local",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "https://eventuna.onrender.com/api",
+			"type": "string"
+		},
+		{
+			"key": "merchant_token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODA5ZWEwM2RhOTM5NDExM2VkZTY4MiIsInJvbGUiOiJtZXJjaGFudCIsImlhdCI6MTc1NDEyMDk1MywiZXhwIjoxNzU0MjA3MzUzfQ.HNSi5ERxaJWZOD2swnuhpq99bVq-aHTcNgKmnlN998Q",
+			"type": "string"
+		},
+		{
+			"key": "event_id",
+			"value": "6890a753a334cf4471f536c1",
+			"type": "string"
+		},
+		{
+			"key": "chat_id",
+			"value": "6890abc9a334cf4471f536d2",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTA1Njk2MTU2ZjU2MWU2OTIzYTM4ZSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU0NTYzOTA5LCJleHAiOjE3NTQ2NTAzMDl9.Evb0Smpm2JVnjJJ8MG5Psuebu144EYQVhgRZ4R5nsRQ",
+			"type": "string"
+		}
+	]
+}
